@@ -1,0 +1,19 @@
+on: push
+name: Test Workflow
+jobs:
+  installDependencies:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Install Dependencies
+        uses: actions/setup-node@v1
+        with:
+          node-version: "12.x"
+      - run: npm i
+
+      - name: Test Code
+        uses: actions/setup-node@v1
+        with:
+          args: npm test
