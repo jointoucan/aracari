@@ -6,14 +6,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
-
-      - name: Install Dependencies
+      - name: Setup container
         uses: actions/setup-node@v1
         with:
           node-version: "12.x"
-      - run: npm i
-
+      - name: Install Yarn
+        run: npm install yarn --global
+      - name: Yarn install
+        run: yarn
       - name: Test Code
-        uses: actions/setup-node@v1
-        with:
-          args: npm test
+        run: yarn test
