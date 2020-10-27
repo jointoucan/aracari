@@ -28,15 +28,41 @@ describe("Aracari", () => {
   });
   test("replaceText should replace text nodes with passed text nodes", () => {
     const parentNode = aracari.getTextNode("toucans").parentNode;
+    // Create some new nodes
     const adjective = document.createElement("strong");
     adjective.textContent = "hermosa";
     const replacementNodes = [adjective, document.createTextNode(" toucans")];
 
+    // Check initial nodes
     expect(parentNode.childNodes.length).toBe(1);
     aracari.replaceText("toucans", replacementNodes).remap();
+    // Check to see that there is more nodes now
     expect(parentNode.childNodes.length).toBe(2);
     expect(aracari.getText()).toEqual(
       `An aracari or araçari (US: /ˌɑːrəˈsɑːri/ AR-ə-SAR-ee,[1] UK: /ˌærəˈsɑːri/ ARR-ə-SAR-ee, /-ˈkɑːri/ -⁠KAR-ee)[2] is any of the medium-sized hermosa toucans that, together with the saffron toucanet, make up the genus Pteroglossus.`
+    );
+  });
+  test("replaceText should replace text and make sure to perserve other text in the text node", () => {
+    const node = aracari.getTextNode("genus");
+    const parentNode = node.parentNode;
+    const replacementNode = document.createTextNode("genus");
+
+    // This is the amount of nodes in the original document
+    expect(parentNode.childNodes.length).toBe(27);
+    // Test to make sure we are looking at the correct node
+    expect(node.textContent).toBe(", make up the genus ");
+    aracari.replaceText("genus", replacementNode).remap();
+    const newNode = aracari.getTextNode("genus");
+    // Correct node added
+    expect(newNode).toBe(replacementNode);
+    // Two nodes appended around the replacement node
+    expect(parentNode.childNodes.length).toBe(29);
+    // Check sibling content
+    expect(newNode.previousSibling.textContent).toBe(", make up the ");
+    expect(newNode.nextSibling.textContent).toBe(" ");
+
+    expect(aracari.getText()).toEqual(
+      `An aracari or araçari (US: /ˌɑːrəˈsɑːri/ AR-ə-SAR-ee,[1] UK: /ˌærəˈsɑːri/ ARR-ə-SAR-ee, /-ˈkɑːri/ -⁠KAR-ee)[2] is any of the medium-sized toucans that, together with the saffron toucanet, make up the genus Pteroglossus.`
     );
   });
 });
