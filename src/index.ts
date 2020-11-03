@@ -1,55 +1,114 @@
 interface Config {
   textNodeType: number;
+  createTextNode?: (text: string) => Node;
 }
 
+interface ReplaceOptions {
+  at?: string
+}
+
+type Mapping = string[][];
+
 export class Aracari<T extends HTMLElement = HTMLElement> {
-  root: T;
+  root: T | undefined;
   mapping: string[][];
   config: Config;
 
-  constructor(root: T, options: Partial<Config> | undefined = {}) {
-    this.root = root;
+  constructor(root: T | Mapping, options: Partial<Config> | undefined = {}) {
     this.config = {
-      textNodeType: options.textNodeType || Node.TEXT_NODE
+      textNodeType: options.textNodeType || Node.TEXT_NODE,
+      createTextNode:
+        options.createTextNode || document.createTextNode.bind(document)
     };
-    this.mapping = this.getTextNodeMapping(root);
+    if (Array.isArray(root)) {
+      this.mapping = root;
+    } else if (typeof root === "object" && root.childNodes) {
+      this.root = root;
+      this.mapping = this.getTextNodeMapping(root);
+    }
   }
 
   public getText() {
     return this.mapping.map(([text]) => text).join("");
   }
 
-  public isInSingleNode(text: string, caseSenative: boolean = true) {
-    return !!this.getTextNode(text, caseSenative);
+  public getAddressForText (text, caseSensitive: boolean = true): string | null {
+    const matchedNode = this.getMappingForText(text, caseSensitive);
+    return matchedNode ? matchedNode[1] : null;
   }
 
-  public getTextNode(text: string, caseSenative: boolean = true) {
-    const pattern = new RegExp(text, `g${caseSenative ? "" : "i"}`);
-    const matchedNode = this.mapping.find(([text]) => !!text.match(pattern));
-    if (!matchedNode) return null;
-    const [, nodeMapping] = matchedNode;
-    const path = nodeMapping.split(".").map(i => parseInt(i, 10));
-    return this.walkNodes(this.root, path);
+  public getTextByAddress (address: string): string | null   {
+    const node = this.getMappingFromAddress(address);
+    return node ? node[0] : null;
   }
 
-  public replaceText(text: string, nodes: T | Node | (T | Node)[]) {
-    // TODO: aracari should not only replace nodes here but figure out
-    // if on replacement that there is additional characters around
-    // the replaced nodes. Eg we need to create more text node to accomidate those chars.
-    const node = this.getTextNode(text);
+  public isInSingleNode(text: string, caseSensitive: boolean = true) {
+    return !!this.getAddressForText(text, caseSensitive);
+  }
+
+  public getTextNode(text: string, caseSensitive: boolean = true) {
+    const address = this.getAddressForText(text, caseSensitive);
+    if (!address) return null;
+    return this.getNodeByAddress(address);
+  }
+
+  public replaceText(text: string, nodes: T | Node | (T | Node)[], options: ReplaceOptions = {}) {
+
+    let node;
+    if (options.at) {
+      node = this.getNodeByAddress(options.at);
+    } else {
+      node = this.getTextNode(text);
+    }
     if (!node) {
       return;
     }
-    node.replaceWith(...(Array.isArray(nodes) ? nodes : [nodes]));
+    // Handling text around replacement text
+    const [preText, postText] = node.textContent.split(text);
+    const replacementNodes = [
+      this.maybeCreateTextNode(preText),
+      ...(Array.isArray(nodes) ? nodes : [nodes]),
+      this.maybeCreateTextNode(postText)
+    ].filter(x => x);
+
+    // Replace existing text node with new nodelist.
+    node.replaceWith(...replacementNodes);
     return this;
   }
 
-  public remap() {
-    this.mapping = this.getTextNodeMapping(this.root);
+  public remap(mapping?: Mapping) {
+    this.mapping = mapping ?? this.getTextNodeMapping(this.root);
     return this;
   }
 
-  private walkNodes(parent: T | undefined, path: number[]) {
+  private getNodeByAddress (address: string) {
+    const path = address.split(".").map(i => parseInt(i, 10));
+    return this.walkNodes(this.root, path);
+  }
+
+  private getMappingForText (text: string, caseSensitive: boolean = true): string[] | undefined {
+    const pattern = new RegExp(text, `${caseSensitive ? 'i' : ''}g`);
+    return this.mapping.find(([text]) => !!text.match(pattern));
+  }
+
+  private getMappingFromAddress (address: string): string[] | undefined {
+    return this.mapping.find(([text, nodeAddress]) => nodeAddress === address);
+  }
+
+  private maybeCreateTextNode(text: string) {
+    const { createTextNode } = this.config;
+    if (!text.length) {
+      return null;
+    }
+    return createTextNode(text);
+  }
+
+  // Takes a node and path and then will recursively call itself
+  // to find the node or return undefined
+  private walkNodes(
+    parent: T | undefined,
+    path: number[]
+  ): ChildNode | undefined {
     if (!path.length || !parent) {
       return parent;
     }
@@ -59,6 +118,8 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
     return this.walkNodes(child, newPath);
   }
 
+  // Builds up a mapping of text and path to location of text node.
+  // [['Foo Bar', '23.1.0.0']]
   private getTextNodeMapping(parent: T, path: number[] = []) {
     const { textNodeType } = this.config;
     return Array.from(parent.childNodes).flatMap((node, i) => {
