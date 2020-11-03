@@ -70,7 +70,7 @@ describe("Aracari", () => {
 
     aracari.replaceText("the", replacementNodes, { at: '0.24' }).remap();
     expect(aracari.getText()).toEqual(
-      `An aracari or araçari (US: /ˌɑːrəˈsɑːri/ AR-ə-SAR-ee,[1] UK: /ˌærəˈsɑːri/ ARR-ə-SAR-ee, /-ˈkɑːri/ -⁠KAR-ee)[2] is any of the medium-sized hermosa toucans that, together with the saffron toucanet, make up el genus Pteroglossus.`
+      `An aracari or araçari (US: /ˌɑːrəˈsɑːri/ AR-ə-SAR-ee,[1] UK: /ˌærəˈsɑːri/ ARR-ə-SAR-ee, /-ˈkɑːri/ -⁠KAR-ee)[2] is any of the medium-sized toucans that, together with the saffron toucanet, make up el genus Pteroglossus.`
     )
   });
   test("replaceText should replace text and make sure to perserve other text in the text node", () => {
