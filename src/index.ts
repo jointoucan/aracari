@@ -1,5 +1,6 @@
 interface Config {
   textNodeType: number;
+  createTextNode?: (text: string) => Node;
 }
 
 interface ReplaceOptions {
@@ -15,7 +16,9 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
 
   constructor(root: T | Mapping, options: Partial<Config> | undefined = {}) {
     this.config = {
-      textNodeType: options.textNodeType || Node.TEXT_NODE
+      textNodeType: options.textNodeType || Node.TEXT_NODE,
+      createTextNode:
+        options.createTextNode || document.createTextNode.bind(document)
     };
     if (Array.isArray(root)) {
       this.mapping = root;
@@ -50,9 +53,7 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
   }
 
   public replaceText(text: string, nodes: T | Node | (T | Node)[], options: ReplaceOptions = {}) {
-    // TODO: aracari should not only replace nodes here but figure out
-    // if on replacement that there is additional characters around
-    // the replaced nodes. Eg we need to create more text node to accomidate those chars.
+
     let node;
     if (options.at) {
       node = this.getNodeByAddress(options.at);
@@ -62,7 +63,16 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
     if (!node) {
       return;
     }
-    node.replaceWith(...(Array.isArray(nodes) ? nodes : [nodes]));
+    // Handling text around replacement text
+    const [preText, postText] = node.textContent.split(text);
+    const replacementNodes = [
+      this.maybeCreateTextNode(preText),
+      ...(Array.isArray(nodes) ? nodes : [nodes]),
+      this.maybeCreateTextNode(postText)
+    ].filter(x => x);
+
+    // Replace existing text node with new nodelist.
+    node.replaceWith(...replacementNodes);
     return this;
   }
 
@@ -85,7 +95,20 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
     return this.mapping.find(([text, nodeAddress]) => nodeAddress === address);
   }
 
-  private walkNodes(parent: T | undefined, path: number[]) {
+  private maybeCreateTextNode(text: string) {
+    const { createTextNode } = this.config;
+    if (!text.length) {
+      return null;
+    }
+    return createTextNode(text);
+  }
+
+  // Takes a node and path and then will recursively call itself
+  // to find the node or return undefined
+  private walkNodes(
+    parent: T | undefined,
+    path: number[]
+  ): ChildNode | undefined {
     if (!path.length || !parent) {
       return parent;
     }
@@ -95,6 +118,8 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
     return this.walkNodes(child, newPath);
   }
 
+  // Builds up a mapping of text and path to location of text node.
+  // [['Foo Bar', '23.1.0.0']]
   private getTextNodeMapping(parent: T, path: number[] = []) {
     const { textNodeType } = this.config;
     return Array.from(parent.childNodes).flatMap((node, i) => {
