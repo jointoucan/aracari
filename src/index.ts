@@ -32,8 +32,8 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
     return this.mapping.map(([text]) => text).join("");
   }
 
-  public getAddressForText (text, caseSenative: boolean = true): string | null {
-    const matchedNode = this.getMappingForText(text, caseSenative);
+  public getAddressForText (text, caseSensitive: boolean = true): string | null {
+    const matchedNode = this.getMappingForText(text, caseSensitive);
     return matchedNode ? matchedNode[1] : null;
   }
 
@@ -42,12 +42,12 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
     return node ? node[0] : null;
   }
 
-  public isInSingleNode(text: string, caseSenative: boolean = true) {
-    return !!this.getAddressForText(text, caseSenative);
+  public isInSingleNode(text: string, caseSensitive: boolean = true) {
+    return !!this.getAddressForText(text, caseSensitive);
   }
 
-  public getTextNode(text: string, caseSenative: boolean = true) {
-    const address = this.getAddressForText(text, caseSenative);
+  public getTextNode(text: string, caseSensitive: boolean = true) {
+    const address = this.getAddressForText(text, caseSensitive);
     if (!address) return null;
     return this.getNodeByAddress(address);
   }
@@ -86,8 +86,8 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
     return this.walkNodes(this.root, path);
   }
 
-  private getMappingForText (text: string, caseSenative: boolean = true): string[] | undefined {
-    const pattern = new RegExp(text, `${caseSenative ? 'i' : ''}g`);
+  private getMappingForText (text: string, caseSensitive: boolean = true): string[] | undefined {
+    const pattern = new RegExp(text, `${caseSensitive ? 'i' : ''}g`);
     return this.mapping.find(([text]) => !!text.match(pattern));
   }
 
