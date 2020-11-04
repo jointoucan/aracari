@@ -81,6 +81,21 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
     return this;
   }
 
+  // Takes a node and path and then will recursively call itself
+  // to find the node or return undefined
+  public walkNodes(
+    parent: T | undefined,
+    path: number[]
+  ): ChildNode | undefined {
+    if (!path.length || !parent) {
+      return parent;
+    }
+    const newPath = [...path];
+    const childNth = newPath.shift();
+    const child = parent.childNodes[childNth] as T | undefined;
+    return this.walkNodes(child, newPath);
+  }
+
   private getNodeByAddress (address: string) {
     const path = address.split(".").map(i => parseInt(i, 10));
     return this.walkNodes(this.root, path);
@@ -101,21 +116,6 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
       return null;
     }
     return createTextNode(text);
-  }
-
-  // Takes a node and path and then will recursively call itself
-  // to find the node or return undefined
-  private walkNodes(
-    parent: T | undefined,
-    path: number[]
-  ): ChildNode | undefined {
-    if (!path.length || !parent) {
-      return parent;
-    }
-    const newPath = [...path];
-    const childNth = newPath.shift();
-    const child = parent.childNodes[childNth] as T | undefined;
-    return this.walkNodes(child, newPath);
   }
 
   // Builds up a mapping of text and path to location of text node.
