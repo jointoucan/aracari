@@ -5,6 +5,7 @@ interface Config {
 
 interface ReplaceOptions {
   at?: string;
+  perserveWord?: boolean;
 }
 
 type Mapping = string[][];
@@ -58,8 +59,9 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
     options: ReplaceOptions = {}
   ) {
     let node;
-    if (options.at) {
-      node = this.getNodeByAddress(options.at);
+    const { at, perserveWord } = options;
+    if (at) {
+      node = this.getNodeByAddress(at);
     } else {
       node = this.getTextNode(text);
     }
@@ -67,7 +69,10 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
     if (!node.textContent.match(text)) {
       throw new Error("Text not found in node");
     }
-    const [preText, ...postText] = node.textContent.split(text);
+    const delimiter = perserveWord ? "\\b" : "";
+    const [preText, ...postText] = node.textContent.split(
+      new RegExp(`${delimiter}${text}${delimiter}`, "g")
+    );
     const replacementNodes = [
       this.maybeCreateTextNode(preText),
       ...(Array.isArray(nodes) ? nodes : [nodes]),
