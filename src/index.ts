@@ -64,11 +64,14 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
       node = this.getTextNode(text);
     }
     // Handling text around replacement text
-    const [preText, postText] = node.textContent.split(text);
+    if (!node.textContent.match(text)) {
+      throw new Error("Text not found in node");
+    }
+    const [preText, ...postText] = node.textContent.split(text);
     const replacementNodes = [
       this.maybeCreateTextNode(preText),
       ...(Array.isArray(nodes) ? nodes : [nodes]),
-      this.maybeCreateTextNode(postText),
+      this.maybeCreateTextNode(postText.join(text)),
     ].filter((x) => x);
 
     // Replace existing text node with new nodelist.
