@@ -1,9 +1,10 @@
 {
   "name": "aracari",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "This is a small utility to pull text from html and also replace text in html.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": ["dist/index.js", "dist/index.d.ts"],
   "repository": "https://github.com/jointoucan/aracari",
   "author": "Jacob Lowe",
   "license": "MIT",

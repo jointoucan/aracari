@@ -21,11 +21,11 @@ describe("Aracari", () => {
   test("isInSingleNode should be false if a text is passed from a multiple text nodes", () => {
     expect(aracari.isInSingleNode("An aracari")).toBe(false);
   });
-  test('getAddressForText should return the correct address for text', () => {
-    expect(aracari.getAddressForText('toucans')).toBe('0.21.0');
+  test("getAddressForText should return the correct address for text", () => {
+    expect(aracari.getAddressForText("toucans")).toBe("0.21.0");
   });
-  test('getTextByAddress should return the correct address for text', () => {
-    expect(aracari.getTextByAddress('0.21.0')).toBe('toucans');
+  test("getTextByAddress should return the correct address for text", () => {
+    expect(aracari.getTextByAddress("0.21.0")).toBe("toucans");
   });
   test("getTextNode should return a text node when passed text in a single node.", () => {
     const node = aracari.getTextNode("toucans");
@@ -68,10 +68,10 @@ describe("Aracari", () => {
     node.textContent = "el";
     const replacementNodes = [node];
 
-    aracari.replaceText("the", replacementNodes, { at: '0.24' }).remap();
+    aracari.replaceText("the", replacementNodes, { at: "0.24" }).remap();
     expect(aracari.getText()).toEqual(
       `An aracari or araçari (US: /ˌɑːrəˈsɑːri/ AR-ə-SAR-ee,[1] UK: /ˌærəˈsɑːri/ ARR-ə-SAR-ee, /-ˈkɑːri/ -⁠KAR-ee)[2] is any of the medium-sized toucans that, together with the saffron toucanet, make up el genus Pteroglossus.`
-    )
+    );
   });
   test("replaceText should replace text and make sure to perserve other text in the text node", () => {
     const node = aracari.getTextNode("genus");
@@ -95,5 +95,12 @@ describe("Aracari", () => {
     expect(aracari.getText()).toEqual(
       `An aracari or araçari (US: /ˌɑːrəˈsɑːri/ AR-ə-SAR-ee,[1] UK: /ˌærəˈsɑːri/ ARR-ə-SAR-ee, /-ˈkɑːri/ -⁠KAR-ee)[2] is any of the medium-sized toucans that, together with the saffron toucanet, make up the genus Pteroglossus.`
     );
+  });
+  test("replaceText should be to perserve text when there is two instances of the same word in a single text node", () => {
+    const element = document.createElement("div");
+    element.innerHTML = "<p>all the foo people are all bar</p>";
+    aracari = new Aracari(element);
+    aracari.replaceText("all", [document.createTextNode("todo")]).remap();
+    expect(aracari.getText()).toBe("todo the foo people are all bar");
   });
 });
