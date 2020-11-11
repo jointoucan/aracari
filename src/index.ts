@@ -96,17 +96,20 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
     return this.walkNodes(child, newPath);
   }
 
-  private getNodeByAddress (address: string) {
-    const path = address.split(".").map(i => parseInt(i, 10));
+  private getNodeByAddress(address: string) {
+    const path = address.split(".").map((i) => parseInt(i, 10));
     return this.walkNodes(this.root, path);
   }
 
-  private getMappingForText (text: string, caseSensitive: boolean = true): string[] | undefined {
-    const pattern = new RegExp(text, `${caseSensitive ? 'i' : ''}g`);
+  private getMappingForText(
+    text: string,
+    caseSensitive: boolean = true
+  ): string[] | undefined {
+    const pattern = new RegExp(text, `${caseSensitive ? "i" : ""}g`);
     return this.mapping.find(([text]) => !!text.match(pattern));
   }
 
-  private getMappingFromAddress (address: string): string[] | undefined {
+  private getMappingFromAddress(address: string): string[] | undefined {
     return this.mapping.find(([text, nodeAddress]) => nodeAddress === address);
   }
 
