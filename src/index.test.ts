@@ -96,4 +96,11 @@ describe("Aracari", () => {
       `An aracari or araçari (US: /ˌɑːrəˈsɑːri/ AR-ə-SAR-ee,[1] UK: /ˌærəˈsɑːri/ ARR-ə-SAR-ee, /-ˈkɑːri/ -⁠KAR-ee)[2] is any of the medium-sized toucans that, together with the saffron toucanet, make up the genus Pteroglossus.`
     );
   });
+  test("replaceText should be to perserve text when there is two instances of the same word in a single text node", () => {
+    const element = document.createElement("div");
+    element.innerHTML = "<p>all the foo people are all bar</p>";
+    aracari = new Aracari(element);
+    aracari.replaceText("all", [document.createTextNode("todo")]).remap();
+    expect(aracari.getText()).toBe("todo the foo people are all bar");
+  });
 });
