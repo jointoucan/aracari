@@ -103,4 +103,26 @@ describe("Aracari", () => {
     aracari.replaceText("all", [document.createTextNode("todo")]).remap();
     expect(aracari.getText()).toBe("todo the foo people are all bar");
   });
+  test("replaceText when passed an option of perserveWord should not replace fragments", () => {
+    const element = document.createElement("div");
+    element.innerHTML = "<p>Done is the one thing.</p>";
+    aracari = new Aracari(element);
+    aracari
+      .replaceText("one", [document.createTextNode("uno")], {
+        perserveWord: true,
+      })
+      .remap();
+    expect(aracari.getText()).toBe("Done is the uno thing.");
+  });
+  test("replaceText when passed an option of perserveWord and a sentence should still work", () => {
+    const element = document.createElement("div");
+    element.innerHTML = "<p>Foo bar or oo bar</p>";
+    aracari = new Aracari(element);
+    aracari
+      .replaceText("oo bar", [document.createTextNode("foo bar")], {
+        perserveWord: true,
+      })
+      .remap();
+    expect(aracari.getText()).toBe("Foo bar or foo bar");
+  });
 });
