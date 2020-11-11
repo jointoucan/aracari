@@ -4,7 +4,7 @@ interface Config {
 }
 
 interface ReplaceOptions {
-  at?: string
+  at?: string;
 }
 
 type Mapping = string[][];
@@ -18,7 +18,7 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
     this.config = {
       textNodeType: options.textNodeType || Node.TEXT_NODE,
       createTextNode:
-        options.createTextNode || document.createTextNode.bind(document)
+        options.createTextNode || document.createTextNode.bind(document),
     };
     if (Array.isArray(root)) {
       this.mapping = root;
@@ -32,12 +32,12 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
     return this.mapping.map(([text]) => text).join("");
   }
 
-  public getAddressForText (text, caseSensitive: boolean = true): string | null {
+  public getAddressForText(text, caseSensitive: boolean = true): string | null {
     const matchedNode = this.getMappingForText(text, caseSensitive);
     return matchedNode ? matchedNode[1] : null;
   }
 
-  public getTextByAddress (address: string): string | null   {
+  public getTextByAddress(address: string): string | null {
     const node = this.getMappingFromAddress(address);
     return node ? node[0] : null;
   }
@@ -52,24 +52,24 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
     return this.getNodeByAddress(address);
   }
 
-  public replaceText(text: string, nodes: T | Node | (T | Node)[], options: ReplaceOptions = {}) {
-
+  public replaceText(
+    text: string,
+    nodes: T | Node | (T | Node)[],
+    options: ReplaceOptions = {}
+  ) {
     let node;
     if (options.at) {
       node = this.getNodeByAddress(options.at);
     } else {
       node = this.getTextNode(text);
     }
-    if (!node) {
-      return;
-    }
     // Handling text around replacement text
     const [preText, postText] = node.textContent.split(text);
     const replacementNodes = [
       this.maybeCreateTextNode(preText),
       ...(Array.isArray(nodes) ? nodes : [nodes]),
-      this.maybeCreateTextNode(postText)
-    ].filter(x => x);
+      this.maybeCreateTextNode(postText),
+    ].filter((x) => x);
 
     // Replace existing text node with new nodelist.
     node.replaceWith(...replacementNodes);
