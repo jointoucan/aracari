@@ -125,4 +125,8 @@ describe("Aracari", () => {
       .remap();
     expect(aracari.getText()).toBe("Foo bar or foo bar");
   });
+  test("getAddressesForText should return an array of address that match the given text passed in", () => {
+    const addresses = aracari.getAddressesForText("toucan");
+    expect(addresses).toEqual(["0.21.0", "0.23.0"]);
+  });
 });
