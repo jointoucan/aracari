@@ -2,7 +2,7 @@
 
 This is a small utility to pull text from html and also replace text in html. This is used to be able to do text replacement in a html document without messing with any html elements or breaking any references.
 
-![Aracari](https://media-cdn.tripadvisor.com/media/photo-s/0a/66/06/43/fiery-billed-aracari.jpg)
+<img src="./assets/aracari.svg" height="300" />
 
 ## Usage
 
