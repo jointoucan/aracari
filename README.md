@@ -1,8 +1,8 @@
+<img src="./assets/aracari.svg" height="300" style="float: right; margin-left: 10px margin-bottom: 10px" />
+
 # Aracari
 
 This is a small utility to pull text from html and also replace text in html. This is used to be able to do text replacement in a html document without messing with any html elements or breaking any references.
-
-<img src="./assets/aracari.svg" height="300" />
 
 ## Usage
 
