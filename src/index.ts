@@ -33,9 +33,30 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
     return this.mapping.map(([text]) => text).join("");
   }
 
-  public getAddressForText(text, caseSensitive: boolean = true): string | null {
-    const matchedNode = this.getMappingForText(text, caseSensitive);
-    return matchedNode ? matchedNode[1] : null;
+  public getAddressForText(
+    text,
+    caseSensitive: boolean = true,
+    perserveWord: boolean = false
+  ): string | null {
+    const matchedNode = this.getMappingsForText(
+      text,
+      caseSensitive,
+      perserveWord
+    );
+    return matchedNode && matchedNode[0] ? matchedNode[0][1] : null;
+  }
+
+  public getAddressesForText(
+    text,
+    caseSensitive: boolean = true,
+    perserveWord: boolean = false
+  ): string[] | null {
+    const matchedNode = this.getMappingsForText(
+      text,
+      caseSensitive,
+      perserveWord
+    );
+    return matchedNode ? matchedNode.map((node) => node[1]) : null;
   }
 
   public getTextByAddress(address: string): string | null {
@@ -89,6 +110,11 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
     return this;
   }
 
+  public getNodeByAddress(address: string) {
+    const path = address.split(".").map((i) => parseInt(i, 10));
+    return this.walkNodes(this.root, path);
+  }
+
   // Takes a node and path and then will recursively call itself
   // to find the node or return undefined
   public walkNodes(
@@ -104,17 +130,17 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
     return this.walkNodes(child, newPath);
   }
 
-  private getNodeByAddress(address: string) {
-    const path = address.split(".").map((i) => parseInt(i, 10));
-    return this.walkNodes(this.root, path);
-  }
-
-  private getMappingForText(
+  private getMappingsForText(
     text: string,
-    caseSensitive: boolean = true
-  ): string[] | undefined {
-    const pattern = new RegExp(text, `${caseSensitive ? "i" : ""}g`);
-    return this.mapping.find(([text]) => !!text.match(pattern));
+    caseSensitive: boolean = true,
+    perserveWord: boolean = false
+  ): string[][] {
+    const delimiter = perserveWord ? "\\b" : "";
+    const pattern = new RegExp(
+      `${delimiter}${text}${delimiter}`,
+      `${caseSensitive ? "i" : ""}g`
+    );
+    return this.mapping.filter(([text]) => !!text.match(pattern));
   }
 
   private getMappingFromAddress(address: string): string[] | undefined {
