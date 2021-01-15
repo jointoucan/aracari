@@ -125,6 +125,17 @@ describe("Aracari", () => {
       .remap();
     expect(aracari.getText()).toBe("Foo bar or foo bar");
   });
+  test("replaceText when passed an option of replacementIndex should replace the text that matches that index", () => {
+    const element = document.createElement("div");
+    element.innerHTML = "<p>foo bar or foo bar</p>";
+    aracari = new Aracari(element);
+    aracari
+      .replaceText("foo bar", [document.createTextNode("baz qux")], {
+        replacementIndex: 1,
+      })
+      .remap();
+    expect(aracari.getText()).toBe("foo bar or baz qux");
+  });
   test("getAddressesForText should return an array of addresses that match the given text passed in", () => {
     const addresses = aracari.getAddressesForText("toucan");
     expect(addresses).toEqual(["0.21.0", "0.23.0"]);
