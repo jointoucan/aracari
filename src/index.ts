@@ -1,32 +1,42 @@
-interface Config {
-  textNodeType: number;
-  createTextNode?: (text: string) => Node;
-}
+import { AracariNode } from "./nodes";
+import {
+  Instruction,
+  InstructionType,
+  Config,
+  Mapping,
+  ReplaceOptions,
+  NodeType,
+} from "./types";
 
-interface ReplaceOptions {
-  at?: string;
-  perserveWord?: boolean;
-  replacementIndex?: number;
-}
-
-type Mapping = string[][];
-
-export class Aracari<T extends HTMLElement = HTMLElement> {
-  root: T | undefined;
+export class Aracari {
+  root: HTMLElement | undefined;
   mapping: string[][];
   config: Config;
+  tree: AracariNode;
+  intructions: Instruction[];
 
-  constructor(root: T | Mapping, options: Partial<Config> | undefined = {}) {
+  constructor(root: HTMLElement, options: Partial<Config> | undefined = {}) {
     this.config = {
       textNodeType: options.textNodeType || Node.TEXT_NODE,
       createTextNode:
         options.createTextNode || document.createTextNode.bind(document),
     };
+
+    // Setup instructions cache.
+    this.intructions = [];
+    this.onUpdate = this.onUpdate.bind(this);
+
+    // Setup initial data structures
     if (Array.isArray(root)) {
       this.mapping = root;
     } else if (typeof root === "object" && root.childNodes) {
+      this.tree = AracariNode.from({
+        originalNode: root,
+        onUpdate: this.onUpdate,
+        root: this,
+      });
       this.root = root;
-      this.mapping = this.getTextNodeMapping(root);
+      this.mapping = this.getTextNodeMapping(this.tree);
     }
   }
 
@@ -77,7 +87,9 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
 
   public replaceText(
     text: string,
-    nodes: T | Node | (T | Node)[],
+    nodes: AracariNode | AracariNode[],
+    // Need to add in cursorPosition
+    // to support multiple words in the same text node
     options: ReplaceOptions = {}
   ) {
     let node;
@@ -87,6 +99,7 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
     } else {
       node = this.getTextNode(text);
     }
+
     // Handling text around replacement text
     if (!node.textContent.match(text)) {
       throw new Error("Text not found in node");
@@ -109,28 +122,79 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
   }
 
   public remap(mapping?: Mapping) {
-    this.mapping = mapping ?? this.getTextNodeMapping(this.root);
+    this.mapping = mapping ?? this.getTextNodeMapping(this.tree);
     return this;
   }
 
   public getNodeByAddress(address: string) {
     const path = address.split(".").map((i) => parseInt(i, 10));
-    return this.walkNodes(this.root, path);
+    return this.walkNodes(this.tree, path);
+  }
+
+  public createElement() {
+    const nodeType = NodeType.HTMLElement;
+    const node = AracariNode.from({
+      originalNode: {
+        nodeType,
+        childNodes: null,
+      },
+      onUpdate: this.onUpdate,
+    });
+    this.onUpdate({
+      target: null,
+      type: InstructionType.CreateElement,
+      value: node,
+    });
+    return node;
+  }
+
+  public createTextNode(textContent: string) {
+    const nodeType = NodeType.Text;
+    const node = AracariNode.from({
+      originalNode: {
+        nodeType,
+        childNodes: null,
+        textContent: textContent,
+      },
+    });
+    this.onUpdate({
+      target: null,
+      type: InstructionType.CreateText,
+      value: textContent,
+    });
+    return node;
   }
 
   // Takes a node and path and then will recursively call itself
   // to find the node or return undefined
   public walkNodes(
-    parent: T | undefined,
+    parent: AracariNode | undefined,
     path: number[]
-  ): ChildNode | undefined {
+  ): AracariNode | undefined {
     if (!path.length || !parent) {
       return parent;
     }
     const newPath = [...path];
     const childNth = newPath.shift();
-    const child = parent.childNodes[childNth] as T | undefined;
+    const child = parent.childNodes[childNth];
     return this.walkNodes(child, newPath);
+  }
+
+  public getDiff() {
+    return this.intructions;
+  }
+
+  public getAddressFromNode(node: AracariNode, path: number[] = []): string {
+    if (node === this.tree) {
+      return path.join(".");
+    }
+    if (!node.parentNode) {
+      throw new Error("Unable address of node, not in same node tree");
+    }
+    const newPath = [...path];
+    const nodeIndex = node.parentNode.childNodes.indexOf(node);
+    newPath.unshift(nodeIndex);
+    return this.getAddressFromNode(node.parentNode, newPath);
   }
 
   private getMappingsForText(
@@ -147,7 +211,7 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
   }
 
   private getMappingFromAddress(address: string): string[] | undefined {
-    return this.mapping.find(([text, nodeAddress]) => nodeAddress === address);
+    return this.mapping.find(([_text, nodeAddress]) => nodeAddress === address);
   }
 
   private maybeCreateTextNode(text: string) {
@@ -155,21 +219,28 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
     if (!text.length) {
       return null;
     }
-    return createTextNode(text);
+    return this.createTextNode(text);
   }
 
   // Builds up a mapping of text and path to location of text node.
   // [['Foo Bar', '23.1.0.0']]
-  private getTextNodeMapping(parent: T, path: number[] = []) {
+  private getTextNodeMapping(parent: AracariNode, path: number[] = []) {
     const { textNodeType } = this.config;
     return Array.from(parent.childNodes).flatMap((node, i) => {
       if (node.nodeType === textNodeType) {
         return [[node.textContent, [...path, i].join(".")]];
       }
       if (typeof node === "object" && node?.childNodes?.length) {
-        return this.getTextNodeMapping(node as T, [...path, i]);
+        return this.getTextNodeMapping(node, [...path, i]);
       }
       return [];
     });
+  }
+
+  private onUpdate(instruction: Instruction) {
+    this.intructions.push(instruction);
+    if (instruction.type === InstructionType.ReplaceWith) {
+      this.remap();
+    }
   }
 }

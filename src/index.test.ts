@@ -35,13 +35,13 @@ describe("Aracari", () => {
   test("replaceText should replace text nodes with passed text nodes", () => {
     const parentNode = aracari.getTextNode("toucans").parentNode;
     // Create some new nodes
-    const adjective = document.createElement("strong");
+    const adjective = aracari.createElement();
     adjective.textContent = "hermosa";
-    const replacementNodes = [adjective, document.createTextNode(" toucans")];
+    const replacementNodes = [adjective, aracari.createTextNode(" toucans")];
 
     // Check initial nodes
     expect(parentNode.childNodes.length).toBe(1);
-    aracari.replaceText("toucans", replacementNodes).remap();
+    aracari.replaceText("toucans", replacementNodes);
     // Check to see that there is more nodes now
     expect(parentNode.childNodes.length).toBe(2);
     expect(aracari.getText()).toEqual(
@@ -51,24 +51,24 @@ describe("Aracari", () => {
 
   test("replaceText should replace text nodes with passed text nodes", () => {
     const parentNode = aracari.getTextNode("toucans").parentNode;
-    const adjective = document.createElement("strong");
+    const adjective = aracari.createElement();
     adjective.textContent = "hermosa";
-    const replacementNodes = [adjective, document.createTextNode(" toucans")];
+    const replacementNodes = [adjective, aracari.createTextNode(" toucans")];
 
     expect(parentNode.childNodes.length).toBe(1);
-    aracari.replaceText("toucans", replacementNodes).remap();
+    // Should remap without explicitly calling it
+    aracari.replaceText("toucans", replacementNodes);
     expect(parentNode.childNodes.length).toBe(2);
     expect(aracari.getText()).toEqual(
       `An aracari or araçari (US: /ˌɑːrəˈsɑːri/ AR-ə-SAR-ee,[1] UK: /ˌærəˈsɑːri/ ARR-ə-SAR-ee, /-ˈkɑːri/ -⁠KAR-ee)[2] is any of the medium-sized hermosa toucans that, together with the saffron toucanet, make up the genus Pteroglossus.`
     );
   });
   test("replaceText should replace text nodes with passed text nodes at a specific address if passed", () => {
-    const parentNode = aracari.getTextNode("the").parentNode;
-    const node = document.createElement("strong");
+    const node = aracari.createElement();
     node.textContent = "el";
     const replacementNodes = [node];
-
-    aracari.replaceText("the", replacementNodes, { at: "0.24" }).remap();
+    // console.log({ node: aracari.getNodeByAddress("0.24").parentNode });
+    aracari.replaceText("the", replacementNodes, { at: "0.24" });
     expect(aracari.getText()).toEqual(
       `An aracari or araçari (US: /ˌɑːrəˈsɑːri/ AR-ə-SAR-ee,[1] UK: /ˌærəˈsɑːri/ ARR-ə-SAR-ee, /-ˈkɑːri/ -⁠KAR-ee)[2] is any of the medium-sized toucans that, together with the saffron toucanet, make up el genus Pteroglossus.`
     );
@@ -76,13 +76,13 @@ describe("Aracari", () => {
   test("replaceText should replace text and make sure to perserve other text in the text node", () => {
     const node = aracari.getTextNode("genus");
     const parentNode = node.parentNode;
-    const replacementNode = document.createTextNode("genus");
+    const replacementNode = aracari.createTextNode("genus");
 
     // This is the amount of nodes in the original document
     expect(parentNode.childNodes.length).toBe(27);
     // Test to make sure we are looking at the correct node
     expect(node.textContent).toBe(", make up the genus ");
-    aracari.replaceText("genus", replacementNode).remap();
+    aracari.replaceText("genus", replacementNode);
     const newNode = aracari.getTextNode("genus");
     // Correct node added
     expect(newNode).toBe(replacementNode);
@@ -100,7 +100,7 @@ describe("Aracari", () => {
     const element = document.createElement("div");
     element.innerHTML = "<p>all the foo people are all bar</p>";
     aracari = new Aracari(element);
-    aracari.replaceText("all", [document.createTextNode("todo")]).remap();
+    aracari.replaceText("all", [aracari.createTextNode("todo")]).remap();
     expect(aracari.getText()).toBe("todo the foo people are all bar");
   });
   test("replaceText when passed an option of perserveWord should not replace fragments", () => {
@@ -108,7 +108,7 @@ describe("Aracari", () => {
     element.innerHTML = "<p>Done is the one thing.</p>";
     aracari = new Aracari(element);
     aracari
-      .replaceText("one", [document.createTextNode("uno")], {
+      .replaceText("one", [aracari.createTextNode("uno")], {
         perserveWord: true,
       })
       .remap();
@@ -119,7 +119,7 @@ describe("Aracari", () => {
     element.innerHTML = "<p>Foo bar or oo bar</p>";
     aracari = new Aracari(element);
     aracari
-      .replaceText("oo bar", [document.createTextNode("foo bar")], {
+      .replaceText("oo bar", [aracari.createTextNode("foo bar")], {
         perserveWord: true,
       })
       .remap();
@@ -130,7 +130,7 @@ describe("Aracari", () => {
     element.innerHTML = "<p>foo bar or foo bar</p>";
     aracari = new Aracari(element);
     aracari
-      .replaceText("foo bar", [document.createTextNode("baz qux")], {
+      .replaceText("foo bar", [aracari.createTextNode("baz qux")], {
         replacementIndex: 1,
       })
       .remap();
@@ -139,5 +139,14 @@ describe("Aracari", () => {
   test("getAddressesForText should return an array of addresses that match the given text passed in", () => {
     const addresses = aracari.getAddressesForText("toucan");
     expect(addresses).toEqual(["0.21.0", "0.23.0"]);
+  });
+
+  test("getDiff should return a json object of differnces better the original root and the virtual tree", () => {
+    const addresses = aracari.getAddressesForText("toucans");
+    console.log(addresses);
+    aracari.replaceText("toucans", [aracari.createTextNode("tookie")]);
+    console.log(aracari.getText());
+    aracari.replaceText("tookie", aracari.createTextNode("tookie tookie"));
+    console.log(aracari.getDiff());
   });
 });
