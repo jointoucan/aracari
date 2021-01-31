@@ -1,5 +1,3 @@
-import { AracariNode } from "./nodes";
-
 export interface Config {
   textNodeType: number;
   createTextNode?: (text: string) => Node;
