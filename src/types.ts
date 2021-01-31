@@ -18,11 +18,21 @@ export interface ReplaceOptions {
 
 export type Mapping = string[][];
 
-export type MinimalNode = {
+export interface MinimalBaseNode {
+  parentNode?: MinimalNode;
   nodeType: number;
-  childNodes: ArrayLike<MinimalNode> | null | undefined;
+  childNodes?: ArrayLike<MinimalNode>;
   textContent?: string;
-};
+  previousSibling?: MinimalNode;
+  nextSibling?: MinimalNode;
+  replaceWith?: (...nodes: MinimalNode[]) => void;
+}
+
+export interface MinimalVirtualNode extends MinimalBaseNode {
+  id?: string;
+}
+
+export type MinimalNode = MinimalBaseNode | MinimalVirtualNode;
 
 export enum InstructionType {
   CreateElement = "CREATE_ELEMENT",
@@ -36,17 +46,17 @@ export interface InstructionBase {
 
 export interface ReplaceWithInstruction extends InstructionBase {
   type: InstructionType.ReplaceWith;
-  value: MinimalNode[];
+  value: MinimalVirtualNode[];
 }
 
 export interface CreateElementInstruction extends InstructionBase {
   type: InstructionType.CreateElement;
-  value: MinimalNode;
+  value: MinimalVirtualNode;
 }
 
 export interface CreateTextInstruction extends InstructionBase {
   type: InstructionType.CreateText;
-  value: string;
+  value: MinimalVirtualNode;
 }
 
 export type Instruction =

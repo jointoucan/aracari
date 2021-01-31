@@ -1,4 +1,5 @@
-import { Aracari } from ".";
+import { Aracari } from "./Aracari";
+import { AracariNode } from "./AracariNode";
 
 // Taken from https://en.wikipedia.org/wiki/Aracari
 const html = `<p>An <b>aracari</b> or <b>araçari</b> (<span class="rt-commentedText nowrap"><small><a href="/wiki/American_English" title="American English">US</a>: </small><span class="IPA nopopups noexcerpt"><a href="/wiki/Help:IPA/English" title="Help:IPA/English">/<span style="border-bottom:1px dotted"><span title="/ˌ/: secondary stress follows">ˌ</span><span title="/ɑːr/: 'ar' in 'far'">ɑːr</span><span title="/ə/: 'a' in 'about'">ə</span><span title="/ˈ/: primary stress follows">ˈ</span><span title="'s' in 'sigh'">s</span><span title="/ɑːr/: 'ar' in 'far'">ɑːr</span><span title="/i/: 'y' in 'happy'">i</span></span>/</a></span></span> <a href="/wiki/Help:Pronunciation_respelling_key" title="Help:Pronunciation respelling key"><i title="English pronunciation respelling"><span style="font-size:90%">AR</span>-ə-<span style="font-size:90%">SAR</span>-ee</i></a>,<sup id="cite_ref-1" class="reference"><a href="#cite_note-1">[1]</a></sup> <span class="rt-commentedText nowrap"><small><a href="/wiki/British_English" title="British English">UK</a>: </small><span class="IPA nopopups noexcerpt"><a href="/wiki/Help:IPA/English" title="Help:IPA/English">/<span style="border-bottom:1px dotted"><span title="/ˌ/: secondary stress follows">ˌ</span><span title="/ær/: 'arr' in 'marry'">ær</span><span title="/ə/: 'a' in 'about'">ə</span><span title="/ˈ/: primary stress follows">ˈ</span><span title="'s' in 'sigh'">s</span><span title="/ɑːr/: 'ar' in 'far'">ɑːr</span><span title="/i/: 'y' in 'happy'">i</span></span>/</a></span></span> <a href="/wiki/Help:Pronunciation_respelling_key" title="Help:Pronunciation respelling key"><i title="English pronunciation respelling"><span style="font-size:90%">ARR</span>-ə-<span style="font-size:90%">SAR</span>-ee</i></a>, <span class="rt-commentedText nowrap"><span class="IPA nopopups noexcerpt"><a href="/wiki/Help:IPA/English" title="Help:IPA/English">/-<span style="border-bottom:1px dotted"><span title="/ˈ/: primary stress follows">ˈ</span><span title="'k' in 'kind'">k</span><span title="/ɑːr/: 'ar' in 'far'">ɑːr</span><span title="/i/: 'y' in 'happy'">i</span></span>/</a></span></span> <a href="/wiki/Help:Pronunciation_respelling_key" title="Help:Pronunciation respelling key"><i title="English pronunciation respelling">-⁠<span style="font-size:90%">KAR</span>-ee</i></a>)<sup id="cite_ref-2" class="reference"><a href="#cite_note-2">[2]</a></sup> is any of the medium-sized <a href="/wiki/Toucan" title="Toucan">toucans</a> that, together with the <a href="/wiki/Saffron_toucanet" title="Saffron toucanet">saffron toucanet</a>, make up the genus <i><b>Pteroglossus</b></i>.</p>`;
@@ -53,7 +54,6 @@ describe("Aracari", () => {
     const node = aracari.createElement();
     node.textContent = "el";
     const replacementNodes = [node];
-    // console.log({ node: aracari.getNodeByAddress("0.24").parentNode });
     aracari.replaceText("the", replacementNodes, { at: "0.24" });
     expect(aracari.getText()).toEqual(
       `An aracari or araçari (US: /ˌɑːrəˈsɑːri/ AR-ə-SAR-ee,[1] UK: /ˌærəˈsɑːri/ ARR-ə-SAR-ee, /-ˈkɑːri/ -⁠KAR-ee)[2] is any of the medium-sized toucans that, together with the saffron toucanet, make up el genus Pteroglossus.`
@@ -121,12 +121,52 @@ describe("Aracari", () => {
     expect(addresses).toEqual(["0.21.0", "0.23.0"]);
   });
 
-  test("getDiff should return a json object of differnces better the original root and the virtual tree", () => {
-    const addresses = aracari.getAddressesForText("toucans");
-    console.log(addresses);
-    aracari.replaceText("toucans", [aracari.createTextNode("tookie")]);
-    console.log(aracari.getText());
-    aracari.replaceText("tookie", aracari.createTextNode("tookie tookie"));
-    console.log(aracari.getDiff());
+  test("commit should apply virtual changes to the root element if present", () => {
+    aracari
+      .replaceText("toucans", aracari.createTextNode("tookie"))
+      .replaceText("tookie", [
+        aracari.createTextNode("tookie "),
+        aracari.createTextNode("tookie"),
+      ])
+      .commit();
+    expect(aracari.tree.toJSON()).toEqual(
+      AracariNode.prototype.toJSON.call(aracari.root)
+    );
+  });
+
+  test("commit should be able to recreate html elements with text when commits", () => {
+    const element = aracari.createElement();
+    element.textContent = "tookie";
+
+    aracari.replaceText("toucans", element).commit();
+    expect(aracari.tree.toJSON()).toEqual(
+      AracariNode.prototype.toJSON.call(aracari.root)
+    );
+  });
+
+  test("Aracari should be able to share a tree between two instances", () => {
+    const tree = aracari.tree;
+    const otherInstance = new Aracari(tree);
+
+    expect(tree.toJSON()).toEqual(otherInstance.tree.toJSON());
+  });
+
+  test("Aracari should be able to share instruction between instances", () => {
+    const tree = aracari.tree;
+    const otherInstance = new Aracari(tree.toJSON({ perserveTypes: true }));
+
+    // Apply some changes
+    const element = otherInstance.createElement();
+    element.textContent = "tookie";
+
+    otherInstance.replaceText("toucans", element);
+    const diff = otherInstance.getDiff();
+
+    // Tree is not going to update only root
+    aracari.hydrateDiff(diff).commit();
+
+    expect(AracariNode.prototype.toJSON.call(aracari.root)).toEqual(
+      otherInstance.tree.toJSON()
+    );
   });
 });

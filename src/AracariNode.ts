@@ -1,20 +1,23 @@
 // https://www.notion.so/jointoucan/Aracari-upgrades-90d50e5f7ba54e33b3a6a64093f81f3f
 
 import { Instruction, InstructionType, MinimalNode, NodeType } from "./types";
-import { Aracari } from ".";
+import { Aracari } from "./Aracari";
 
 interface AracariNodeOptions {
   originalNode: MinimalNode;
   parentNode?: AracariNode;
   onUpdate?: (instruction: Instruction) => void;
   root?: Aracari;
+  id?: string;
 }
 
 const noop = () => {};
 
 export class AracariNode {
+  __type = "ARACARI_NODE";
   nodeType: number;
   _content?: string;
+  id?: string;
   childNodes: AracariNode[];
   parentNode?: AracariNode;
   originalNode: MinimalNode;
@@ -27,19 +30,21 @@ export class AracariNode {
     parentNode,
     onUpdate,
     root,
+    id,
   }: AracariNodeOptions) {
     this.nodeType = originalNode.nodeType;
     this.root = root;
-    this.childNodes =
-      originalNode.childNodes &&
-      Array.from(originalNode.childNodes).map((node) =>
-        AracariNode.from({
-          originalNode: node,
-          parentNode: this,
-          onUpdate,
-          root,
-        })
-      );
+    this.id = id;
+    this.childNodes = originalNode.childNodes
+      ? Array.from(originalNode.childNodes).map((node) =>
+          AracariNode.from({
+            originalNode: node,
+            parentNode: this,
+            onUpdate,
+            root,
+          })
+        )
+      : [];
     this.parentNode = parentNode;
     if (this.nodeType === NodeType.Text) {
       this.textContent = originalNode.textContent;
@@ -54,11 +59,6 @@ export class AracariNode {
 
   set textContent(text) {
     if (this.nodeType === NodeType.HTMLElement) {
-      this.onUpdate({
-        target: this.root?.getAddressFromNode(this),
-        type: InstructionType.CreateText,
-        value: text,
-      });
       const node = AracariNode.from({
         originalNode: {
           nodeType: NodeType.Text,
@@ -67,6 +67,12 @@ export class AracariNode {
         },
         parentNode: this,
       });
+      this.onUpdate({
+        target: this.id ?? null,
+        type: InstructionType.CreateText,
+        value: node,
+      });
+      // Need update to be able to append this to this element
       this.childNodes = [node];
     } else {
       this._content = text;
@@ -118,9 +124,10 @@ export class AracariNode {
     });
   }
 
-  toJSON() {
-    const { nodeType, childNodes, textContent } = this;
+  toJSON(options: { perserveTypes?: boolean } = {}) {
+    const { nodeType, childNodes, textContent, __type } = this;
     return {
+      __type: options.perserveTypes ? __type : undefined,
       nodeType,
       textContent: nodeType === NodeType.Text ? textContent : undefined,
       childNodes:
@@ -137,6 +144,12 @@ export class AracariNode {
     onUpdate,
     root,
   }: AracariNodeOptions) {
-    return new AracariNode({ originalNode, parentNode, onUpdate, root });
+    return new AracariNode({
+      originalNode,
+      parentNode,
+      onUpdate,
+      root,
+      id: root?.intructions.length.toString(),
+    });
   }
 }
