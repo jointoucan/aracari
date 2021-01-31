@@ -49,20 +49,6 @@ describe("Aracari", () => {
     );
   });
 
-  test("replaceText should replace text nodes with passed text nodes", () => {
-    const parentNode = aracari.getTextNode("toucans").parentNode;
-    const adjective = aracari.createElement();
-    adjective.textContent = "hermosa";
-    const replacementNodes = [adjective, aracari.createTextNode(" toucans")];
-
-    expect(parentNode.childNodes.length).toBe(1);
-    // Should remap without explicitly calling it
-    aracari.replaceText("toucans", replacementNodes);
-    expect(parentNode.childNodes.length).toBe(2);
-    expect(aracari.getText()).toEqual(
-      `An aracari or araçari (US: /ˌɑːrəˈsɑːri/ AR-ə-SAR-ee,[1] UK: /ˌærəˈsɑːri/ ARR-ə-SAR-ee, /-ˈkɑːri/ -⁠KAR-ee)[2] is any of the medium-sized hermosa toucans that, together with the saffron toucanet, make up the genus Pteroglossus.`
-    );
-  });
   test("replaceText should replace text nodes with passed text nodes at a specific address if passed", () => {
     const node = aracari.createElement();
     node.textContent = "el";
@@ -100,40 +86,34 @@ describe("Aracari", () => {
     const element = document.createElement("div");
     element.innerHTML = "<p>all the foo people are all bar</p>";
     aracari = new Aracari(element);
-    aracari.replaceText("all", [aracari.createTextNode("todo")]).remap();
+    aracari.replaceText("all", [aracari.createTextNode("todo")]);
     expect(aracari.getText()).toBe("todo the foo people are all bar");
   });
   test("replaceText when passed an option of perserveWord should not replace fragments", () => {
     const element = document.createElement("div");
     element.innerHTML = "<p>Done is the one thing.</p>";
     aracari = new Aracari(element);
-    aracari
-      .replaceText("one", [aracari.createTextNode("uno")], {
-        perserveWord: true,
-      })
-      .remap();
+    aracari.replaceText("one", [aracari.createTextNode("uno")], {
+      perserveWord: true,
+    });
     expect(aracari.getText()).toBe("Done is the uno thing.");
   });
   test("replaceText when passed an option of perserveWord and a sentence should still work", () => {
     const element = document.createElement("div");
     element.innerHTML = "<p>Foo bar or oo bar</p>";
     aracari = new Aracari(element);
-    aracari
-      .replaceText("oo bar", [aracari.createTextNode("foo bar")], {
-        perserveWord: true,
-      })
-      .remap();
+    aracari.replaceText("oo bar", [aracari.createTextNode("foo bar")], {
+      perserveWord: true,
+    });
     expect(aracari.getText()).toBe("Foo bar or foo bar");
   });
   test("replaceText when passed an option of replacementIndex should replace the text that matches that index", () => {
     const element = document.createElement("div");
     element.innerHTML = "<p>foo bar or foo bar</p>";
     aracari = new Aracari(element);
-    aracari
-      .replaceText("foo bar", [aracari.createTextNode("baz qux")], {
-        replacementIndex: 1,
-      })
-      .remap();
+    aracari.replaceText("foo bar", [aracari.createTextNode("baz qux")], {
+      replacementIndex: 1,
+    });
     expect(aracari.getText()).toBe("foo bar or baz qux");
   });
   test("getAddressesForText should return an array of addresses that match the given text passed in", () => {
