@@ -1,5 +1,3 @@
-// https://www.notion.so/jointoucan/Aracari-upgrades-90d50e5f7ba54e33b3a6a64093f81f3f
-
 import { Instruction, InstructionType, MinimalNode, NodeType } from "./types";
 import { Aracari } from "./Aracari";
 
