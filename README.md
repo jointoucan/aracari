@@ -47,15 +47,14 @@ if (canReplace) {
   // Replace on the fly text on a page with other TextNodes or
   // DOM nodes.
   // Build up some DOM nodes.
-  const boldNode = document.createElement("strong");
+  const boldNode = aracari.createElement("strong");
   bold.textContent = "araçari";
-  const textNode = document.createTextNode("a hermosa ");
-  // Do the replacment and reload aracari cache.
-  const newText = aracari
-    .replaceText("aracari", [textNode, boldNode])
-    .remap() // changes internal mapping (not need if used as side effect)
-    .text();
+  const textNode = aracari.createTextNode("a hermosa ");
+  // Do the replacment in virtual tree
+  aracari.replaceText("aracari", [textNode, boldNode]);
+  const newText = aracari.getText();
   // newText: This is a hermosa aracari!
-  // html will be updated with new nodes
+  // Commit changes to html nodes
+  aracari.commit();
 }
 ```

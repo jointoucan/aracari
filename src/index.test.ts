@@ -1,4 +1,5 @@
-import { Aracari } from ".";
+import { Aracari } from "./Aracari";
+import { AracariNode } from "./AracariNode";
 
 // Taken from https://en.wikipedia.org/wiki/Aracari
 const html = `<p>An <b>aracari</b> or <b>araçari</b> (<span class="rt-commentedText nowrap"><small><a href="/wiki/American_English" title="American English">US</a>: </small><span class="IPA nopopups noexcerpt"><a href="/wiki/Help:IPA/English" title="Help:IPA/English">/<span style="border-bottom:1px dotted"><span title="/ˌ/: secondary stress follows">ˌ</span><span title="/ɑːr/: 'ar' in 'far'">ɑːr</span><span title="/ə/: 'a' in 'about'">ə</span><span title="/ˈ/: primary stress follows">ˈ</span><span title="'s' in 'sigh'">s</span><span title="/ɑːr/: 'ar' in 'far'">ɑːr</span><span title="/i/: 'y' in 'happy'">i</span></span>/</a></span></span> <a href="/wiki/Help:Pronunciation_respelling_key" title="Help:Pronunciation respelling key"><i title="English pronunciation respelling"><span style="font-size:90%">AR</span>-ə-<span style="font-size:90%">SAR</span>-ee</i></a>,<sup id="cite_ref-1" class="reference"><a href="#cite_note-1">[1]</a></sup> <span class="rt-commentedText nowrap"><small><a href="/wiki/British_English" title="British English">UK</a>: </small><span class="IPA nopopups noexcerpt"><a href="/wiki/Help:IPA/English" title="Help:IPA/English">/<span style="border-bottom:1px dotted"><span title="/ˌ/: secondary stress follows">ˌ</span><span title="/ær/: 'arr' in 'marry'">ær</span><span title="/ə/: 'a' in 'about'">ə</span><span title="/ˈ/: primary stress follows">ˈ</span><span title="'s' in 'sigh'">s</span><span title="/ɑːr/: 'ar' in 'far'">ɑːr</span><span title="/i/: 'y' in 'happy'">i</span></span>/</a></span></span> <a href="/wiki/Help:Pronunciation_respelling_key" title="Help:Pronunciation respelling key"><i title="English pronunciation respelling"><span style="font-size:90%">ARR</span>-ə-<span style="font-size:90%">SAR</span>-ee</i></a>, <span class="rt-commentedText nowrap"><span class="IPA nopopups noexcerpt"><a href="/wiki/Help:IPA/English" title="Help:IPA/English">/-<span style="border-bottom:1px dotted"><span title="/ˈ/: primary stress follows">ˈ</span><span title="'k' in 'kind'">k</span><span title="/ɑːr/: 'ar' in 'far'">ɑːr</span><span title="/i/: 'y' in 'happy'">i</span></span>/</a></span></span> <a href="/wiki/Help:Pronunciation_respelling_key" title="Help:Pronunciation respelling key"><i title="English pronunciation respelling">-⁠<span style="font-size:90%">KAR</span>-ee</i></a>)<sup id="cite_ref-2" class="reference"><a href="#cite_note-2">[2]</a></sup> is any of the medium-sized <a href="/wiki/Toucan" title="Toucan">toucans</a> that, together with the <a href="/wiki/Saffron_toucanet" title="Saffron toucanet">saffron toucanet</a>, make up the genus <i><b>Pteroglossus</b></i>.</p>`;
@@ -35,13 +36,13 @@ describe("Aracari", () => {
   test("replaceText should replace text nodes with passed text nodes", () => {
     const parentNode = aracari.getTextNode("toucans").parentNode;
     // Create some new nodes
-    const adjective = document.createElement("strong");
+    const adjective = aracari.createElement("span");
     adjective.textContent = "hermosa";
-    const replacementNodes = [adjective, document.createTextNode(" toucans")];
+    const replacementNodes = [adjective, aracari.createTextNode(" toucans")];
 
     // Check initial nodes
     expect(parentNode.childNodes.length).toBe(1);
-    aracari.replaceText("toucans", replacementNodes).remap();
+    aracari.replaceText("toucans", replacementNodes);
     // Check to see that there is more nodes now
     expect(parentNode.childNodes.length).toBe(2);
     expect(aracari.getText()).toEqual(
@@ -49,26 +50,11 @@ describe("Aracari", () => {
     );
   });
 
-  test("replaceText should replace text nodes with passed text nodes", () => {
-    const parentNode = aracari.getTextNode("toucans").parentNode;
-    const adjective = document.createElement("strong");
-    adjective.textContent = "hermosa";
-    const replacementNodes = [adjective, document.createTextNode(" toucans")];
-
-    expect(parentNode.childNodes.length).toBe(1);
-    aracari.replaceText("toucans", replacementNodes).remap();
-    expect(parentNode.childNodes.length).toBe(2);
-    expect(aracari.getText()).toEqual(
-      `An aracari or araçari (US: /ˌɑːrəˈsɑːri/ AR-ə-SAR-ee,[1] UK: /ˌærəˈsɑːri/ ARR-ə-SAR-ee, /-ˈkɑːri/ -⁠KAR-ee)[2] is any of the medium-sized hermosa toucans that, together with the saffron toucanet, make up the genus Pteroglossus.`
-    );
-  });
   test("replaceText should replace text nodes with passed text nodes at a specific address if passed", () => {
-    const parentNode = aracari.getTextNode("the").parentNode;
-    const node = document.createElement("strong");
+    const node = aracari.createElement("span");
     node.textContent = "el";
     const replacementNodes = [node];
-
-    aracari.replaceText("the", replacementNodes, { at: "0.24" }).remap();
+    aracari.replaceText("the", replacementNodes, { at: "0.24" });
     expect(aracari.getText()).toEqual(
       `An aracari or araçari (US: /ˌɑːrəˈsɑːri/ AR-ə-SAR-ee,[1] UK: /ˌærəˈsɑːri/ ARR-ə-SAR-ee, /-ˈkɑːri/ -⁠KAR-ee)[2] is any of the medium-sized toucans that, together with the saffron toucanet, make up el genus Pteroglossus.`
     );
@@ -76,13 +62,13 @@ describe("Aracari", () => {
   test("replaceText should replace text and make sure to perserve other text in the text node", () => {
     const node = aracari.getTextNode("genus");
     const parentNode = node.parentNode;
-    const replacementNode = document.createTextNode("genus");
+    const replacementNode = aracari.createTextNode("genus");
 
     // This is the amount of nodes in the original document
     expect(parentNode.childNodes.length).toBe(27);
     // Test to make sure we are looking at the correct node
     expect(node.textContent).toBe(", make up the genus ");
-    aracari.replaceText("genus", replacementNode).remap();
+    aracari.replaceText("genus", replacementNode);
     const newNode = aracari.getTextNode("genus");
     // Correct node added
     expect(newNode).toBe(replacementNode);
@@ -100,44 +86,124 @@ describe("Aracari", () => {
     const element = document.createElement("div");
     element.innerHTML = "<p>all the foo people are all bar</p>";
     aracari = new Aracari(element);
-    aracari.replaceText("all", [document.createTextNode("todo")]).remap();
+    aracari.replaceText("all", [aracari.createTextNode("todo")]);
     expect(aracari.getText()).toBe("todo the foo people are all bar");
   });
-  test("replaceText when passed an option of perserveWord should not replace fragments", () => {
+  test("replaceText when passed an option of preserveWord should not replace fragments", () => {
     const element = document.createElement("div");
     element.innerHTML = "<p>Done is the one thing.</p>";
     aracari = new Aracari(element);
-    aracari
-      .replaceText("one", [document.createTextNode("uno")], {
-        perserveWord: true,
-      })
-      .remap();
+    aracari.replaceText("one", [aracari.createTextNode("uno")], {
+      preserveWord: true,
+    });
     expect(aracari.getText()).toBe("Done is the uno thing.");
   });
-  test("replaceText when passed an option of perserveWord and a sentence should still work", () => {
+  test("replaceText when passed an option of preserveWord and a sentence should still work", () => {
     const element = document.createElement("div");
     element.innerHTML = "<p>Foo bar or oo bar</p>";
     aracari = new Aracari(element);
-    aracari
-      .replaceText("oo bar", [document.createTextNode("foo bar")], {
-        perserveWord: true,
-      })
-      .remap();
+    aracari.replaceText("oo bar", [aracari.createTextNode("foo bar")], {
+      preserveWord: true,
+    });
     expect(aracari.getText()).toBe("Foo bar or foo bar");
   });
   test("replaceText when passed an option of replacementIndex should replace the text that matches that index", () => {
     const element = document.createElement("div");
     element.innerHTML = "<p>foo bar or foo bar</p>";
     aracari = new Aracari(element);
-    aracari
-      .replaceText("foo bar", [document.createTextNode("baz qux")], {
-        replacementIndex: 1,
-      })
-      .remap();
+    aracari.replaceText("foo bar", [aracari.createTextNode("baz qux")], {
+      replacementIndex: 1,
+    });
     expect(aracari.getText()).toBe("foo bar or baz qux");
   });
   test("getAddressesForText should return an array of addresses that match the given text passed in", () => {
     const addresses = aracari.getAddressesForText("toucan");
     expect(addresses).toEqual(["0.21.0", "0.23.0"]);
+  });
+
+  test("commit should apply virtual changes to the root element if present", () => {
+    aracari
+      .replaceText("toucans", aracari.createTextNode("foo"))
+      .replaceText("foo", [
+        aracari.createTextNode("foo "),
+        aracari.createTextNode("foo"),
+      ])
+      .commit();
+    expect(aracari.tree.toJSON()).toEqual(
+      AracariNode.prototype.toJSON.call(aracari.root)
+    );
+  });
+
+  test("commit should be able to recreate html elements with text when commits", () => {
+    const element = aracari.createElement("span");
+    element.textContent = "foo";
+
+    aracari.replaceText("toucans", element).commit();
+    expect(aracari.tree.toJSON()).toEqual(
+      AracariNode.prototype.toJSON.call(aracari.root)
+    );
+  });
+
+  test("Aracari should be able to share a tree between two instances", () => {
+    const tree = aracari.tree;
+    const otherInstance = new Aracari(tree);
+
+    expect(tree.toJSON()).toEqual(otherInstance.tree.toJSON());
+  });
+
+  test("Aracari should be able to share instruction between instances", () => {
+    const tree = aracari.tree;
+    const otherInstance = new Aracari(tree.toJSON({ preserveTypes: true }));
+
+    // Apply some changes
+    const element = otherInstance.createElement("span");
+    element.textContent = "foo";
+
+    otherInstance.replaceText("toucans", element);
+    const diff = otherInstance.getDiff();
+
+    // Tree is not going to update only root
+    aracari.hydrateDiff(diff).commit();
+
+    expect(AracariNode.prototype.toJSON.call(aracari.root)).toEqual(
+      otherInstance.tree.toJSON()
+    );
+  });
+
+  test("replaceText should not append nodes if no matches are found", () => {
+    const element = document.createElement("div");
+    const replacementOptions = { preserveWord: true };
+    // Taken from https://en.wikipedia.org/wiki/French_Polynesia#Culture
+    element.innerHTML = `<p><a href="/wiki/French_language" title="French language">French</a> is the only official language of French Polynesia.<sup id="cite_ref-35" class="reference"><a href="#cite_note-35">[31]</a></sup> An <a href="/wiki/Organic_law" title="Organic law">organic law</a> of 12 April 1996 states that "French is the official language, Tahitian and other Polynesian languages can be used." At the 2017 census, among the population whose age was 15 and older</p>`;
+    aracari = new Aracari(element);
+    // Replace the two that are in the sentence
+    aracari
+      .replaceText(
+        "language",
+        [aracari.createTextNode("foo")],
+        replacementOptions
+      )
+      .replaceText(
+        "language",
+        [aracari.createTextNode("bar")],
+        replacementOptions
+      );
+
+    expect(() => {
+      aracari
+        .replaceText(
+          "language",
+          [aracari.createTextNode("baz")],
+          replacementOptions
+        )
+        .replaceText(
+          "language",
+          [aracari.createTextNode("qux")],
+          replacementOptions
+        );
+    }).toThrowError(/not found/);
+    expect(aracari.getText()).toBe(
+      `French is the only official foo of French Polynesia.[31] An organic law of 12 April 1996 states that "French is the official bar, Tahitian and other Polynesian languages can be used." At the 2017 census, among the population whose age was 15 and older`
+    );
   });
 });

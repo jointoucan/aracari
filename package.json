@@ -5,8 +5,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
-    "dist/index.js",
-    "dist/index.d.ts"
+    "dist/*",
+    "dist/*"
   ],
   "repository": "https://github.com/jointoucan/aracari",
   "author": "Jacob Lowe",
