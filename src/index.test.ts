@@ -36,7 +36,7 @@ describe("Aracari", () => {
   test("replaceText should replace text nodes with passed text nodes", () => {
     const parentNode = aracari.getTextNode("toucans").parentNode;
     // Create some new nodes
-    const adjective = aracari.createElement();
+    const adjective = aracari.createElement("span");
     adjective.textContent = "hermosa";
     const replacementNodes = [adjective, aracari.createTextNode(" toucans")];
 
@@ -51,7 +51,7 @@ describe("Aracari", () => {
   });
 
   test("replaceText should replace text nodes with passed text nodes at a specific address if passed", () => {
-    const node = aracari.createElement();
+    const node = aracari.createElement("span");
     node.textContent = "el";
     const replacementNodes = [node];
     aracari.replaceText("the", replacementNodes, { at: "0.24" });
@@ -135,7 +135,7 @@ describe("Aracari", () => {
   });
 
   test("commit should be able to recreate html elements with text when commits", () => {
-    const element = aracari.createElement();
+    const element = aracari.createElement("span");
     element.textContent = "foo";
 
     aracari.replaceText("toucans", element).commit();
@@ -156,7 +156,7 @@ describe("Aracari", () => {
     const otherInstance = new Aracari(tree.toJSON({ preserveTypes: true }));
 
     // Apply some changes
-    const element = otherInstance.createElement();
+    const element = otherInstance.createElement("span");
     element.textContent = "foo";
 
     otherInstance.replaceText("toucans", element);

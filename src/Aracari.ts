@@ -133,7 +133,7 @@ export class Aracari {
     return this.walkNodes(base ?? this.tree, path);
   }
 
-  public createElement() {
+  public createElement(tagName: string) {
     const nodeType = NodeType.HTMLElement;
     const node = AracariNode.from({
       originalNode: {
@@ -146,7 +146,7 @@ export class Aracari {
     this.onUpdate({
       target: null,
       type: InstructionType.CreateElement,
-      value: node,
+      value: { ...node, tagName },
     });
     return node;
   }
@@ -209,7 +209,9 @@ export class Aracari {
           }
           break;
         case InstructionType.CreateElement: {
-          nodes[instruction.value.id] = reconciler.onCreateElement();
+          nodes[instruction.value.id] = reconciler.onCreateElement(
+            instruction.value.tagName
+          );
           break;
         }
         case InstructionType.ReplaceWith: {

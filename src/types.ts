@@ -49,7 +49,7 @@ export interface ReplaceWithInstruction extends InstructionBase {
 
 export interface CreateElementInstruction extends InstructionBase {
   type: InstructionType.CreateElement;
-  value: MinimalVirtualNode;
+  value: MinimalVirtualNode & { tagName: string };
 }
 
 export interface CreateTextInstruction extends InstructionBase {
@@ -64,7 +64,7 @@ export type Instruction =
 
 export interface AracariReconciler {
   onCreateTextNode: (text: string) => Text;
-  onCreateElement: () => HTMLElement;
+  onCreateElement: (tagName: string) => HTMLElement;
   onReplaceWith: (
     target: Text | HTMLElement,
     replacements: Array<Text | HTMLElement>
