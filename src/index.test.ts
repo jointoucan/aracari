@@ -89,21 +89,21 @@ describe("Aracari", () => {
     aracari.replaceText("all", [aracari.createTextNode("todo")]);
     expect(aracari.getText()).toBe("todo the foo people are all bar");
   });
-  test("replaceText when passed an option of perserveWord should not replace fragments", () => {
+  test("replaceText when passed an option of preserveWord should not replace fragments", () => {
     const element = document.createElement("div");
     element.innerHTML = "<p>Done is the one thing.</p>";
     aracari = new Aracari(element);
     aracari.replaceText("one", [aracari.createTextNode("uno")], {
-      perserveWord: true,
+      preserveWord: true,
     });
     expect(aracari.getText()).toBe("Done is the uno thing.");
   });
-  test("replaceText when passed an option of perserveWord and a sentence should still work", () => {
+  test("replaceText when passed an option of preserveWord and a sentence should still work", () => {
     const element = document.createElement("div");
     element.innerHTML = "<p>Foo bar or oo bar</p>";
     aracari = new Aracari(element);
     aracari.replaceText("oo bar", [aracari.createTextNode("foo bar")], {
-      perserveWord: true,
+      preserveWord: true,
     });
     expect(aracari.getText()).toBe("Foo bar or foo bar");
   });
@@ -123,10 +123,10 @@ describe("Aracari", () => {
 
   test("commit should apply virtual changes to the root element if present", () => {
     aracari
-      .replaceText("toucans", aracari.createTextNode("tookie"))
-      .replaceText("tookie", [
-        aracari.createTextNode("tookie "),
-        aracari.createTextNode("tookie"),
+      .replaceText("toucans", aracari.createTextNode("foo"))
+      .replaceText("foo", [
+        aracari.createTextNode("foo "),
+        aracari.createTextNode("foo"),
       ])
       .commit();
     expect(aracari.tree.toJSON()).toEqual(
@@ -136,7 +136,7 @@ describe("Aracari", () => {
 
   test("commit should be able to recreate html elements with text when commits", () => {
     const element = aracari.createElement();
-    element.textContent = "tookie";
+    element.textContent = "foo";
 
     aracari.replaceText("toucans", element).commit();
     expect(aracari.tree.toJSON()).toEqual(
@@ -153,11 +153,11 @@ describe("Aracari", () => {
 
   test("Aracari should be able to share instruction between instances", () => {
     const tree = aracari.tree;
-    const otherInstance = new Aracari(tree.toJSON({ perserveTypes: true }));
+    const otherInstance = new Aracari(tree.toJSON({ preserveTypes: true }));
 
     // Apply some changes
     const element = otherInstance.createElement();
-    element.textContent = "tookie";
+    element.textContent = "foo";
 
     otherInstance.replaceText("toucans", element);
     const diff = otherInstance.getDiff();
@@ -172,7 +172,7 @@ describe("Aracari", () => {
 
   test("replaceText should not append nodes if no matches are found", () => {
     const element = document.createElement("div");
-    const replacmentOptions = { perserveWord: true };
+    const replacementOptions = { preserveWord: true };
     // Taken from https://en.wikipedia.org/wiki/French_Polynesia#Culture
     element.innerHTML = `<p><a href="/wiki/French_language" title="French language">French</a> is the only official language of French Polynesia.<sup id="cite_ref-35" class="reference"><a href="#cite_note-35">[31]</a></sup> An <a href="/wiki/Organic_law" title="Organic law">organic law</a> of 12 April 1996 states that "French is the official language, Tahitian and other Polynesian languages can be used." At the 2017 census, among the population whose age was 15 and older</p>`;
     aracari = new Aracari(element);
@@ -181,12 +181,12 @@ describe("Aracari", () => {
       .replaceText(
         "language",
         [aracari.createTextNode("foo")],
-        replacmentOptions
+        replacementOptions
       )
       .replaceText(
         "language",
         [aracari.createTextNode("bar")],
-        replacmentOptions
+        replacementOptions
       );
 
     expect(() => {
@@ -194,12 +194,12 @@ describe("Aracari", () => {
         .replaceText(
           "language",
           [aracari.createTextNode("baz")],
-          replacmentOptions
+          replacementOptions
         )
         .replaceText(
           "language",
           [aracari.createTextNode("qux")],
-          replacmentOptions
+          replacementOptions
         );
     }).toThrowError(/not found/);
     expect(aracari.getText()).toBe(

@@ -1,4 +1,5 @@
 import { AracariNode } from "./AracariNode";
+import { defaultReconciler } from "./defaultReconciler";
 import {
   Instruction,
   InstructionType,
@@ -11,23 +12,22 @@ import {
 
 export class Aracari {
   root: HTMLElement | AracariNode | MinimalNode;
-  mapping: string[][];
+  mapping: Mapping;
   config: Config;
   tree: AracariNode;
-  intructions: Instruction[];
+  instructions: Instruction[];
 
   constructor(
     root: HTMLElement | AracariNode | MinimalNode,
     options: Partial<Config> | undefined = {}
   ) {
     this.config = {
-      textNodeType: options.textNodeType || Node.TEXT_NODE,
-      createTextNode:
-        options.createTextNode || document.createTextNode.bind(document),
+      textNodeType: options.textNodeType ?? Node.TEXT_NODE,
+      reconciler: options.reconciler ?? defaultReconciler,
     };
 
     // Setup instructions cache.
-    this.intructions = [];
+    this.instructions = [];
     this.onUpdate = this.onUpdate.bind(this);
 
     // Setup initial data structures
@@ -52,12 +52,12 @@ export class Aracari {
   public getAddressForText(
     text,
     caseSensitive: boolean = true,
-    perserveWord: boolean = false
+    preserveWord: boolean = false
   ): string | null {
     const matchedNode = this.getMappingsForText(
       text,
       caseSensitive,
-      perserveWord
+      preserveWord
     );
     return matchedNode && matchedNode[0] ? matchedNode[0][1] : null;
   }
@@ -65,12 +65,12 @@ export class Aracari {
   public getAddressesForText(
     text,
     caseSensitive: boolean = true,
-    perserveWord: boolean = false
+    preserveWord: boolean = false
   ): string[] | null {
     const matchedNode = this.getMappingsForText(
       text,
       caseSensitive,
-      perserveWord
+      preserveWord
     );
     return matchedNode ? matchedNode.map((node) => node[1]) : null;
   }
@@ -98,14 +98,14 @@ export class Aracari {
     options: ReplaceOptions = {}
   ) {
     let node;
-    const { at, perserveWord, replacementIndex = 0 } = options;
+    const { at, preserveWord, replacementIndex = 0 } = options;
     if (at) {
       node = this.getNodeByAddress(at);
     } else {
       node = this.getTextNode(text);
     }
 
-    const delimiter = perserveWord ? "\\b" : "";
+    const delimiter = preserveWord ? "\\b" : "";
     const pattern = new RegExp(`${delimiter}${text}${delimiter}`, "g");
 
     // Handling text around replacement text
@@ -122,7 +122,7 @@ export class Aracari {
       this.maybeCreateTextNode(postText.join(text)),
     ].filter((x) => x);
 
-    // Replace existing text node with new nodelist.
+    // Replace existing text node with new node list.
     node.replaceWith(...replacementNodes);
     return this;
   }
@@ -186,23 +186,21 @@ export class Aracari {
   }
 
   public getDiff() {
-    return this.intructions;
+    return this.instructions;
   }
 
   public hydrateDiff(instructions: Instruction[]) {
-    this.intructions = instructions;
+    this.instructions = instructions;
     return this;
   }
 
   public commit() {
     const nodes: Record<string, Text | HTMLElement> = {};
-    this.intructions.forEach((instruction) => {
-      // apply instructions to actual DOM.
-      // these should be a configuration
-      // that can be passed, sorta like a reconsiler
+    const { reconciler } = this.config;
+    this.instructions.forEach((instruction) => {
       switch (instruction.type) {
         case InstructionType.CreateText:
-          nodes[instruction.value.id] = document.createTextNode(
+          nodes[instruction.value.id] = reconciler.onCreateTextNode(
             instruction.value.textContent
           );
           if (instruction.target) {
@@ -211,7 +209,7 @@ export class Aracari {
           }
           break;
         case InstructionType.CreateElement: {
-          nodes[instruction.value.id] = document.createElement("span");
+          nodes[instruction.value.id] = reconciler.onCreateElement();
           break;
         }
         case InstructionType.ReplaceWith: {
@@ -219,16 +217,16 @@ export class Aracari {
             instruction.target,
             // @ts-ignore
             this.root
-          );
-          targetNode?.replaceWith(
-            // @ts-ignore
-            ...instruction.value.map((node) => nodes[node.id])
+          ) as HTMLElement | Text;
+          reconciler.onReplaceWith(
+            targetNode,
+            instruction.value.map((node) => nodes[node.id])
           );
           break;
         }
       }
     });
-    this.intructions = [];
+    this.instructions = [];
   }
 
   public getAddressFromNode(node: AracariNode, path: number[] = []): string {
@@ -252,9 +250,9 @@ export class Aracari {
   private getMappingsForText(
     text: string,
     caseSensitive: boolean = true,
-    perserveWord: boolean = false
+    preserveWord: boolean = false
   ): string[][] {
-    const delimiter = perserveWord ? "\\b" : "";
+    const delimiter = preserveWord ? "\\b" : "";
     const pattern = new RegExp(
       `${delimiter}${text}${delimiter}`,
       `${caseSensitive ? "i" : ""}g`
@@ -289,7 +287,7 @@ export class Aracari {
   }
 
   private onUpdate(instruction: Instruction) {
-    this.intructions.push(instruction);
+    this.instructions.push(instruction);
     if (instruction.type === InstructionType.ReplaceWith) {
       this.remap();
     }

@@ -88,10 +88,11 @@ export class AracariNode {
   }
 
   replaceWith(...nodes: AracariNode[]) {
-    if (!this.parentNode) {
+    const { parentNode, root } = this;
+    if (!parentNode) {
       throw new Error("Can not 'replaceWith' on node with no parent");
     }
-    const nodeIndex = this.parentNode.childNodes.indexOf(this);
+    const nodeIndex = parentNode.childNodes.indexOf(this);
 
     if (nodeIndex === -1) {
       throw new Error(
@@ -99,9 +100,8 @@ export class AracariNode {
       );
     }
 
-    const { parentNode } = this;
     const { childNodes } = parentNode;
-    const targetAddress = this.root?.getAddressFromNode(this);
+    const targetAddress = root?.getAddressFromNode(this);
     const insertableChildNodes = Array.isArray(nodes) ? nodes : [nodes];
     insertableChildNodes
       .filter((x) => x)
@@ -122,10 +122,10 @@ export class AracariNode {
     });
   }
 
-  toJSON(options: { perserveTypes?: boolean } = {}) {
+  toJSON(options: { preserveTypes?: boolean } = {}) {
     const { nodeType, childNodes, textContent, __type } = this;
     return {
-      __type: options.perserveTypes ? __type : undefined,
+      __type: options.preserveTypes ? __type : undefined,
       nodeType,
       textContent: nodeType === NodeType.Text ? textContent : undefined,
       childNodes:
@@ -147,7 +147,7 @@ export class AracariNode {
       parentNode,
       onUpdate,
       root,
-      id: root?.intructions.length.toString(),
+      id: root?.instructions.length.toString(),
     });
   }
 }

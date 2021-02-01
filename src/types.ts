@@ -1,6 +1,6 @@
 export interface Config {
   textNodeType: number;
-  createTextNode?: (text: string) => Node;
+  reconciler?: AracariReconciler;
 }
 
 export enum NodeType {
@@ -10,11 +10,11 @@ export enum NodeType {
 
 export interface ReplaceOptions {
   at?: string;
-  perserveWord?: boolean;
+  preserveWord?: boolean;
   replacementIndex?: number;
 }
 
-export type Mapping = string[][];
+export type Mapping = Array<[string, string]>;
 
 export interface MinimalBaseNode {
   parentNode?: MinimalNode;
@@ -61,3 +61,12 @@ export type Instruction =
   | ReplaceWithInstruction
   | CreateElementInstruction
   | CreateTextInstruction;
+
+export interface AracariReconciler {
+  onCreateTextNode: (text: string) => Text;
+  onCreateElement: () => HTMLElement;
+  onReplaceWith: (
+    target: Text | HTMLElement,
+    replacements: Array<Text | HTMLElement>
+  ) => void;
+}
