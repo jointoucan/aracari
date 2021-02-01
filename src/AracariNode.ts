@@ -1,5 +1,5 @@
 import { Instruction, InstructionType, MinimalNode, NodeType } from "./types";
-import { Aracari } from "./Aracari";
+import type { Aracari } from "./Aracari";
 
 interface AracariNodeOptions {
   originalNode: MinimalNode;
