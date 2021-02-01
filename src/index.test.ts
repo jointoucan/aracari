@@ -169,4 +169,42 @@ describe("Aracari", () => {
       otherInstance.tree.toJSON()
     );
   });
+
+  // Bugs
+
+  test.only("replaceText should not append nodes if no matches are found", () => {
+    const element = document.createElement("div");
+    const replacmentOptions = { perserveWord: true };
+    element.innerHTML = `<p><a href="/wiki/French_language" title="French language">French</a> is the only official language of French Polynesia.<sup id="cite_ref-35" class="reference"><a href="#cite_note-35">[31]</a></sup> An <a href="/wiki/Organic_law" title="Organic law">organic law</a> of 12 April 1996 states that "French is the official language, Tahitian and other Polynesian languages can be used." At the 2017 census, among the population whose age was 15 and older</p>`;
+    aracari = new Aracari(element);
+    // Replace the two that are in the sentence
+    aracari
+      .replaceText(
+        "language",
+        [aracari.createTextNode("foo")],
+        replacmentOptions
+      )
+      .replaceText(
+        "language",
+        [aracari.createTextNode("bar")],
+        replacmentOptions
+      );
+
+    expect(() => {
+      aracari
+        .replaceText(
+          "language",
+          [aracari.createTextNode("baz")],
+          replacmentOptions
+        )
+        .replaceText(
+          "language",
+          [aracari.createTextNode("qux")],
+          replacmentOptions
+        );
+    }).toThrowError(/not found/);
+    expect(aracari.getText()).toBe(
+      `French is the only official foo of French Polynesia.[31] An organic law of 12 April 1996 states that "French is the official bar, Tahitian and other Polynesian languages can be used." At the 2017 census, among the population whose age was 15 and older`
+    );
+  });
 });
