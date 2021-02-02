@@ -82,19 +82,19 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
   ) {
     let node;
     const { at, perserveWord, replacementIndex = 0 } = options;
+
     if (at) {
       node = this.getNodeByAddress(at);
     } else {
       node = this.getTextNode(text);
     }
+    const delimiter = perserveWord ? "\\b" : "";
+    const pattern = new RegExp(`${delimiter}${text}${delimiter}`, "g");
     // Handling text around replacement text
-    if (!node.textContent.match(text)) {
+    if (!node.textContent.match(pattern)) {
       throw new Error("Text not found in node");
     }
-    const delimiter = perserveWord ? "\\b" : "";
-    const contents = node.textContent.split(
-      new RegExp(`${delimiter}${text}${delimiter}`, "g")
-    );
+    const contents = node.textContent.split(pattern);
     const preText = contents.slice(0, replacementIndex + 1);
     const postText = contents.slice(replacementIndex + 1);
     const replacementNodes = [
