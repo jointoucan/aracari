@@ -1,3 +1,5 @@
+import { escapeRegExp } from "./utils";
+
 interface Config {
   textNodeType: number;
   createTextNode?: (text: string) => Node;
@@ -89,7 +91,10 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
       node = this.getTextNode(text);
     }
     const delimiter = perserveWord ? "\\b" : "";
-    const pattern = new RegExp(`${delimiter}${text}${delimiter}`, "g");
+    const pattern = new RegExp(
+      `${delimiter}${escapeRegExp(text)}${delimiter}`,
+      "g"
+    );
     // Handling text around replacement text
     if (!node.textContent.match(pattern)) {
       throw new Error("Text not found in node");
@@ -103,7 +108,7 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
       this.maybeCreateTextNode(postText.join(text)),
     ].filter((x) => x);
 
-    // Replace existing text node with new nodelist.
+    // Replace existing text node with new node-list.
     node.replaceWith(...replacementNodes);
     return this;
   }
@@ -140,7 +145,7 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
   ): string[][] {
     const delimiter = perserveWord ? "\\b" : "";
     const pattern = new RegExp(
-      `${delimiter}${text}${delimiter}`,
+      `${delimiter}${escapeRegExp(text)}${delimiter}`,
       `${caseSensitive ? "i" : ""}g`
     );
     return this.mapping.filter(([text]) => !!text.match(pattern));
