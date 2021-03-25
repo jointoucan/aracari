@@ -1,5 +1,7 @@
 import { escapeRegExp } from "./utils";
 
+export { escapeRegExp } from "./utils";
+
 interface Config {
   textNodeType: number;
   createTextNode?: (text: string) => Node;
