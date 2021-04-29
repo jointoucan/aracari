@@ -1,0 +1,49 @@
+version: 2
+registries:
+  npm-registry-npm-pkg-github-com:
+    type: npm-registry
+    url: https://npm.pkg.github.com
+    username: "${{secrets.NPM_REGISTRY_NPM_PKG_GITHUB_COM_USERNAME}}"
+    password: "${{secrets.NPM_REGISTRY_NPM_PKG_GITHUB_COM_PASSWORD}}"
+
+updates:
+- package-ecosystem: npm
+  directory: "/"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  reviewers:
+  - jcblw
+  ignore:
+  - dependency-name: y18n
+    versions:
+    - 4.0.1
+    - 4.0.2
+  - dependency-name: "@types/jest"
+    versions:
+    - 26.0.21
+    - 26.0.22
+  - dependency-name: "@babel/preset-env"
+    versions:
+    - 7.12.11
+    - 7.12.13
+    - 7.12.16
+    - 7.12.17
+    - 7.13.0
+    - 7.13.10
+    - 7.13.12
+    - 7.13.5
+    - 7.13.8
+  - dependency-name: typescript
+    versions:
+    - 4.1.4
+    - 4.1.5
+    - 4.2.2
+    - 4.2.3
+  - dependency-name: "@babel/preset-typescript"
+    versions:
+    - 7.12.13
+    - 7.12.16
+    - 7.12.17
+  registries:
+  - npm-registry-npm-pkg-github-com
