@@ -9,8 +9,9 @@ interface Config {
 
 interface ReplaceOptions {
   at?: string;
-  perserveWord?: boolean;
+  preserveWord?: boolean;
   replacementIndex?: number;
+  shouldUseNonLatinMatch?: boolean;
 }
 
 type Mapping = string[][];
@@ -41,12 +42,12 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
   public getAddressForText(
     text,
     caseSensitive: boolean = true,
-    perserveWord: boolean = false
+    preserveWord: boolean = false
   ): string | null {
     const matchedNode = this.getMappingsForText(
       text,
       caseSensitive,
-      perserveWord
+      preserveWord
     );
     return matchedNode && matchedNode[0] ? matchedNode[0][1] : null;
   }
@@ -54,12 +55,12 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
   public getAddressesForText(
     text,
     caseSensitive: boolean = true,
-    perserveWord: boolean = false
+    preserveWord: boolean = false
   ): string[] | null {
     const matchedNode = this.getMappingsForText(
       text,
       caseSensitive,
-      perserveWord
+      preserveWord
     );
     return matchedNode ? matchedNode.map((node) => node[1]) : null;
   }
@@ -79,20 +80,68 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
     return this.getNodeByAddress(address);
   }
 
+  private nonLatinMatchAndReplacement = ({
+    node,
+    text,
+    nodes,
+    replacementIndex
+  }: {
+    node: any;
+    text: string,
+    nodes: T | Node | (T | Node)[];
+    replacementIndex: number;
+  }) => {
+    // Using this pattern because look-around regex not supported in some browsers
+    // (\b) word bound does not work with non-latin scripts
+    const pattern = new RegExp(
+      `(?:^|\\s)${escapeRegExp(text)}(?:$|\\s|[.!?,"'])`,
+      "g"
+    );
+    if (!node.textContent.match(pattern)) {
+      throw new Error("Text not found in node");
+    }
+    const matchingPhrase = node.textContent.match(pattern)[0];
+    // Preceding character matching and delimiting
+    const isFirstDelimitingCharacter = matchingPhrase.charAt(0).match(new RegExp(`\\s|^|[ ]`))[0] !== "";
+    const precedingCharacter = isFirstDelimitingCharacter ? matchingPhrase.charAt(0) : "";
+    // Following character matching and delimiting
+    const isLastDelimitingCharacter = matchingPhrase.charAt(matchingPhrase - 1).match(new RegExp(`($|\\s|[.!?,"'])`))[0] !== "";
+    const lastCharacter = isLastDelimitingCharacter ? matchingPhrase.charAt(matchingPhrase - 1) : "";
+    const contents = node.textContent.split(pattern);
+    const preText = contents.slice(0, replacementIndex + 1);
+    const postText = contents.slice(replacementIndex + 1);
+
+    const replacementNodes = [
+      this.maybeCreateTextNode(preText.join(text) + precedingCharacter),
+      ...(Array.isArray(nodes) ? nodes : [nodes]),
+      this.maybeCreateTextNode(lastCharacter + postText.join(text)),
+    ].filter((x) => x);
+
+    // Replace existing text node with new node-list.
+    node.replaceWith(...replacementNodes);
+    return this;
+  }
+
   public replaceText(
     text: string,
     nodes: T | Node | (T | Node)[],
     options: ReplaceOptions = {}
   ) {
     let node;
-    const { at, perserveWord, replacementIndex = 0 } = options;
+    const { at, preserveWord, replacementIndex = 0, shouldUseNonLatinMatch = false } = options;;
 
     if (at) {
       node = this.getNodeByAddress(at);
     } else {
       node = this.getTextNode(text);
     }
-    const delimiter = perserveWord ? "\\b" : "";
+
+    // Use non word bound ('\b') matching and replacement
+    if (shouldUseNonLatinMatch) {
+      return this.nonLatinMatchAndReplacement({ node, text, nodes, replacementIndex });
+    }
+
+    const delimiter = preserveWord ? "\\b" : "";
     const pattern = new RegExp(
       `${delimiter}${escapeRegExp(text)}${delimiter}`,
       "g"
@@ -143,9 +192,9 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
   private getMappingsForText(
     text: string,
     caseSensitive: boolean = true,
-    perserveWord: boolean = false
+    preserveWord: boolean = false
   ): string[][] {
-    const delimiter = perserveWord ? "\\b" : "";
+    const delimiter = preserveWord ? "\\b" : "";
     const pattern = new RegExp(
       `${delimiter}${escapeRegExp(text)}${delimiter}`,
       `${caseSensitive ? "i" : ""}g`
