@@ -103,24 +103,24 @@ describe("Aracari", () => {
     aracari.replaceText("all", [document.createTextNode("todo")]).remap();
     expect(aracari.getText()).toBe("todo the foo people are all bar");
   });
-  test("replaceText when passed an option of preserveWord should not replace fragments", () => {
+  test("replaceText when passed an option of perserveWord should not replace fragments", () => {
     const element = document.createElement("div");
     element.innerHTML = "<p>Done is the one thing.</p>";
     aracari = new Aracari(element);
     aracari
       .replaceText("one", [document.createTextNode("uno")], {
-        preserveWord: true,
+        perserveWord: true,
       })
       .remap();
     expect(aracari.getText()).toBe("Done is the uno thing.");
   });
-  test("replaceText when passed an option of preserveWord and a sentence should still work", () => {
+  test("replaceText when passed an option of perserveWord and a sentence should still work", () => {
     const element = document.createElement("div");
     element.innerHTML = "<p>Foo bar or oo bar</p>";
     aracari = new Aracari(element);
     aracari
       .replaceText("oo bar", [document.createTextNode("foo bar")], {
-        preserveWord: true,
+        perserveWord: true,
       })
       .remap();
     expect(aracari.getText()).toBe("Foo bar or foo bar");
@@ -142,7 +142,7 @@ describe("Aracari", () => {
   });
   test("replaceText should not append nodes if no matches are found", () => {
     const element = document.createElement("div");
-    const replacementOptions = { preserveWord: true };
+    const replacementOptions = { perserveWord: true };
     // Taken from https://en.wikipedia.org/wiki/French_Polynesia#Culture
     element.innerHTML = `<p><a href="/wiki/French_language" title="French language">French</a> is the only official language of French Polynesia.<sup id="cite_ref-35" class="reference"><a href="#cite_note-35">[31]</a></sup> An <a href="/wiki/Organic_law" title="Organic law">organic law</a> of 12 April 1996 states that "French is the official language, Tahitian and other Polynesian languages can be used." At the 2017 census, among the population whose age was 15 and older</p>`;
     aracari = new Aracari(element);

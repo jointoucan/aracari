@@ -9,7 +9,7 @@ interface Config {
 
 interface ReplaceOptions {
   at?: string;
-  preserveWord?: boolean;
+  perserveWord?: boolean;
   replacementIndex?: number;
   shouldUseNonLatinMatch?: boolean;
 }
@@ -42,12 +42,12 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
   public getAddressForText(
     text,
     caseSensitive: boolean = true,
-    preserveWord: boolean = false
+    perserveWord: boolean = false
   ): string | null {
     const matchedNode = this.getMappingsForText(
       text,
       caseSensitive,
-      preserveWord
+      perserveWord
     );
     return matchedNode && matchedNode[0] ? matchedNode[0][1] : null;
   }
@@ -55,12 +55,12 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
   public getAddressesForText(
     text,
     caseSensitive: boolean = true,
-    preserveWord: boolean = false
+    perserveWord: boolean = false
   ): string[] | null {
     const matchedNode = this.getMappingsForText(
       text,
       caseSensitive,
-      preserveWord
+      perserveWord
     );
     return matchedNode ? matchedNode.map((node) => node[1]) : null;
   }
@@ -128,7 +128,7 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
     options: ReplaceOptions = {}
   ) {
     let node;
-    const { at, preserveWord, replacementIndex = 0, shouldUseNonLatinMatch = false } = options;;
+    const { at, perserveWord, replacementIndex = 0, shouldUseNonLatinMatch = false } = options;;
 
     if (at) {
       node = this.getNodeByAddress(at);
@@ -141,7 +141,7 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
       return this.nonLatinMatchAndReplacement({ node, text, nodes, replacementIndex });
     }
 
-    const delimiter = preserveWord ? "\\b" : "";
+    const delimiter = perserveWord ? "\\b" : "";
     const pattern = new RegExp(
       `${delimiter}${escapeRegExp(text)}${delimiter}`,
       "g"
@@ -192,9 +192,9 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
   private getMappingsForText(
     text: string,
     caseSensitive: boolean = true,
-    preserveWord: boolean = false
+    perserveWord: boolean = false
   ): string[][] {
-    const delimiter = preserveWord ? "\\b" : "";
+    const delimiter = perserveWord ? "\\b" : "";
     const pattern = new RegExp(
       `${delimiter}${escapeRegExp(text)}${delimiter}`,
       `${caseSensitive ? "i" : ""}g`
