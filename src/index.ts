@@ -222,7 +222,7 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
       if (node.nodeType === textNodeType) {
         return [[node.textContent, [...path, i].join(".")]];
       }
-      if (typeof node === "object" && node ?.childNodes ?.length) {
+      if (typeof node === "object" && node?.childNodes?.length) {
         return this.getTextNodeMapping(node as T, [...path, i]);
       }
       return [];
