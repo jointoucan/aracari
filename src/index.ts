@@ -11,7 +11,7 @@ interface ReplaceOptions {
   at?: string;
   preserveWord?: boolean;
   replacementIndex?: number;
-  nonWordBoundMatch?: boolean;
+  shouldUseNonLatinMatch?: boolean;
 }
 
 type Mapping = string[][];
@@ -80,19 +80,19 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
     return this.getNodeByAddress(address);
   }
 
-  private nonWordBoundMatchReplacement = (
-    { node,
-      text,
-      nodes,
-      replacementIndex
-    }: {
-      node: any;
-      text: string,
-      nodes: T | Node | (T | Node)[];
-      replacementIndex: number;
-    }) => {
+  private nonLatinMatchAndReplacement = ({
+    node,
+    text,
+    nodes,
+    replacementIndex
+  }: {
+    node: any;
+    text: string,
+    nodes: T | Node | (T | Node)[];
+    replacementIndex: number;
+  }) => {
     // Using this pattern because look-around regex not supported in some browsers
-    // \b Word bound works with latin based characters and does not work with other characters
+    // (\b) word bound does not work with non-latin scripts
     const pattern = new RegExp(
       `(?:^|\\s)${escapeRegExp(text)}(?:$|\\s|[.!?,"'])`,
       "g"
@@ -128,7 +128,7 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
     options: ReplaceOptions = {}
   ) {
     let node;
-    const { at, preserveWord, replacementIndex = 0, nonWordBoundMatch = false } = options;;
+    const { at, preserveWord, replacementIndex = 0, shouldUseNonLatinMatch = false } = options;;
 
     if (at) {
       node = this.getNodeByAddress(at);
@@ -136,9 +136,9 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
       node = this.getTextNode(text);
     }
 
-    // Use non word bound '\b' matching and replacement
-    if (nonWordBoundMatch) {
-      return this.nonWordBoundMatchReplacement({ node, text, nodes, replacementIndex });
+    // Use non word bound ('\b') matching and replacement
+    if (shouldUseNonLatinMatch) {
+      return this.nonLatinMatchAndReplacement({ node, text, nodes, replacementIndex });
     }
 
     const delimiter = preserveWord ? "\\b" : "";
