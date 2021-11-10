@@ -80,69 +80,84 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
     return this.getNodeByAddress(address);
   }
 
-  public replaceText(
-    text: string,
-    nodes: T | Node | (T | Node)[],
-    options: ReplaceOptions = {}
-  ) {
-    let node;
-    const { at, preserveWord, replacementIndex = 0, nonWordBoundMatch = true } = options;
-    console.log('options :>> ', options);
-
-    if (at) {
-      node = this.getNodeByAddress(at);
-    } else {
-      node = this.getTextNode(text);
-    }
-    const delimiter = preserveWord ? "\\b" : "";
-    const pattern = nonWordBoundMatch ?
-      new RegExp(
-        `(?:^|\\s)${escapeRegExp(text)}(?:$|\\s|[.!?,"'])`,
-        "g"
-      ) :
-      new RegExp(
-        `${delimiter}${escapeRegExp(text)}${delimiter}`,
-        "g"
-      );
-
-    console.log('pattern :>> ', pattern);
-    console.log('node.textContent.match(pattern) :>> ', node.textContent.match(pattern));
-    // Handling text around replacement text
+  private nonWordBoundMatchReplacement = (
+    { node,
+      text,
+      nodes,
+      replacementIndex
+    }: {
+      node: any;
+      text: string,
+      nodes: T | Node | (T | Node)[];
+      replacementIndex: number;
+    }) => {
+    // Using this pattern because look-around regex not supported in some browsers
+    // \b Word bound works with latin based characters and does not work with other characters
+    const pattern = new RegExp(
+      `(?:^|\\s)${escapeRegExp(text)}(?:$|\\s|[.!?,"'])`,
+      "g"
+    );
     if (!node.textContent.match(pattern)) {
       throw new Error("Text not found in node");
     }
-
     const matchingPhrase = node.textContent.match(pattern)[0];
-
+    // Preceding character matching and delimiting
     const isFirstDelimitingCharacter = matchingPhrase.charAt(0).match(new RegExp(`\\s|^|[ ]`))[0] !== "";
-    console.log(`character at 0: !${matchingPhrase.charAt(0)}!`);
-    console.log('matchingPhrase.charAt(0) :>> ', '!' + matchingPhrase.charAt(0).match(new RegExp(`\\s|^|[ ]`)));
     const precedingCharacter = isFirstDelimitingCharacter ? matchingPhrase.charAt(0) : "";
-    console.log('isFirstDelimitingCharacter :>> ', isFirstDelimitingCharacter);
-
+    // Following character matching and delimiting
     const isLastDelimitingCharacter = matchingPhrase.charAt(matchingPhrase - 1).match(new RegExp(`($|\\s|[.!?,"'])`))[0] !== "";
     const lastCharacter = isLastDelimitingCharacter ? matchingPhrase.charAt(matchingPhrase - 1) : "";
-    console.log('isLastDelimitingCharacter :>> ', isLastDelimitingCharacter);
-
-    console.log('matchingPhrase :>> ', matchingPhrase);
-    console.log('precedingCharacter :>> ', precedingCharacter);
-    console.log('lastCharacter :>> ', lastCharacter);
-
     const contents = node.textContent.split(pattern);
-    console.log('contents :>> ', contents);
-
     const preText = contents.slice(0, replacementIndex + 1);
-    console.log('preText :>> ', preText);
-
     const postText = contents.slice(replacementIndex + 1);
-    console.log('postText :>> ', postText);
 
     const replacementNodes = [
       this.maybeCreateTextNode(preText.join(text) + precedingCharacter),
       ...(Array.isArray(nodes) ? nodes : [nodes]),
       this.maybeCreateTextNode(lastCharacter + postText.join(text)),
     ].filter((x) => x);
-    console.log('replacementNodes :>> ', replacementNodes);
+
+    // Replace existing text node with new node-list.
+    node.replaceWith(...replacementNodes);
+    return this;
+  }
+
+  public replaceText(
+    text: string,
+    nodes: T | Node | (T | Node)[],
+    options: ReplaceOptions = {}
+  ) {
+    let node;
+    const { at, preserveWord, replacementIndex = 0, nonWordBoundMatch = false } = options;;
+
+    if (at) {
+      node = this.getNodeByAddress(at);
+    } else {
+      node = this.getTextNode(text);
+    }
+
+    // Use non word bound '\b' matching and replacement
+    if (nonWordBoundMatch) {
+      return this.nonWordBoundMatchReplacement({ node, text, nodes, replacementIndex });
+    }
+
+    const delimiter = preserveWord ? "\\b" : "";
+    const pattern = new RegExp(
+      `${delimiter}${escapeRegExp(text)}${delimiter}`,
+      "g"
+    );
+    // Handling text around replacement text
+    if (!node.textContent.match(pattern)) {
+      throw new Error("Text not found in node");
+    }
+    const contents = node.textContent.split(pattern);
+    const preText = contents.slice(0, replacementIndex + 1);
+    const postText = contents.slice(replacementIndex + 1);
+    const replacementNodes = [
+      this.maybeCreateTextNode(preText.join(text)),
+      ...(Array.isArray(nodes) ? nodes : [nodes]),
+      this.maybeCreateTextNode(postText.join(text)),
+    ].filter((x) => x);
 
     // Replace existing text node with new node-list.
     node.replaceWith(...replacementNodes);
