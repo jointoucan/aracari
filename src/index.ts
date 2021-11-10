@@ -9,8 +9,9 @@ interface Config {
 
 interface ReplaceOptions {
   at?: string;
-  perserveWord?: boolean;
+  preserveWord?: boolean;
   replacementIndex?: number;
+  nonWordBoundMatch?: boolean;
 }
 
 type Mapping = string[][];
@@ -41,12 +42,12 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
   public getAddressForText(
     text,
     caseSensitive: boolean = true,
-    perserveWord: boolean = false
+    preserveWord: boolean = false
   ): string | null {
     const matchedNode = this.getMappingsForText(
       text,
       caseSensitive,
-      perserveWord
+      preserveWord
     );
     return matchedNode && matchedNode[0] ? matchedNode[0][1] : null;
   }
@@ -54,12 +55,12 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
   public getAddressesForText(
     text,
     caseSensitive: boolean = true,
-    perserveWord: boolean = false
+    preserveWord: boolean = false
   ): string[] | null {
     const matchedNode = this.getMappingsForText(
       text,
       caseSensitive,
-      perserveWord
+      preserveWord
     );
     return matchedNode ? matchedNode.map((node) => node[1]) : null;
   }
@@ -85,30 +86,63 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
     options: ReplaceOptions = {}
   ) {
     let node;
-    const { at, perserveWord, replacementIndex = 0 } = options;
+    const { at, preserveWord, replacementIndex = 0, nonWordBoundMatch = true } = options;
+    console.log('options :>> ', options);
 
     if (at) {
       node = this.getNodeByAddress(at);
     } else {
       node = this.getTextNode(text);
     }
-    const delimiter = perserveWord ? "\\b" : "";
-    const pattern = new RegExp(
-      `${delimiter}${escapeRegExp(text)}${delimiter}`,
-      "g"
-    );
+    const delimiter = preserveWord ? "\\b" : "";
+    const pattern = nonWordBoundMatch ?
+      new RegExp(
+        `(?:^|\\s)${escapeRegExp(text)}(?:$|\\s|[.!?,"'])`,
+        "g"
+      ) :
+      new RegExp(
+        `${delimiter}${escapeRegExp(text)}${delimiter}`,
+        "g"
+      );
+
+    console.log('pattern :>> ', pattern);
+    console.log('node.textContent.match(pattern) :>> ', node.textContent.match(pattern));
     // Handling text around replacement text
     if (!node.textContent.match(pattern)) {
       throw new Error("Text not found in node");
     }
+
+    const matchingPhrase = node.textContent.match(pattern)[0];
+
+    const isFirstDelimitingCharacter = matchingPhrase.charAt(0).match(new RegExp(`\\s|^|[ ]`))[0] !== "";
+    console.log(`character at 0: !${matchingPhrase.charAt(0)}!`);
+    console.log('matchingPhrase.charAt(0) :>> ', '!' + matchingPhrase.charAt(0).match(new RegExp(`\\s|^|[ ]`)));
+    const precedingCharacter = isFirstDelimitingCharacter ? matchingPhrase.charAt(0) : "";
+    console.log('isFirstDelimitingCharacter :>> ', isFirstDelimitingCharacter);
+
+    const isLastDelimitingCharacter = matchingPhrase.charAt(matchingPhrase - 1).match(new RegExp(`($|\\s|[.!?,"'])`))[0] !== "";
+    const lastCharacter = isLastDelimitingCharacter ? matchingPhrase.charAt(matchingPhrase - 1) : "";
+    console.log('isLastDelimitingCharacter :>> ', isLastDelimitingCharacter);
+
+    console.log('matchingPhrase :>> ', matchingPhrase);
+    console.log('precedingCharacter :>> ', precedingCharacter);
+    console.log('lastCharacter :>> ', lastCharacter);
+
     const contents = node.textContent.split(pattern);
+    console.log('contents :>> ', contents);
+
     const preText = contents.slice(0, replacementIndex + 1);
+    console.log('preText :>> ', preText);
+
     const postText = contents.slice(replacementIndex + 1);
+    console.log('postText :>> ', postText);
+
     const replacementNodes = [
-      this.maybeCreateTextNode(preText.join(text)),
+      this.maybeCreateTextNode(preText.join(text) + precedingCharacter),
       ...(Array.isArray(nodes) ? nodes : [nodes]),
-      this.maybeCreateTextNode(postText.join(text)),
+      this.maybeCreateTextNode(lastCharacter + postText.join(text)),
     ].filter((x) => x);
+    console.log('replacementNodes :>> ', replacementNodes);
 
     // Replace existing text node with new node-list.
     node.replaceWith(...replacementNodes);
@@ -143,9 +177,9 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
   private getMappingsForText(
     text: string,
     caseSensitive: boolean = true,
-    perserveWord: boolean = false
+    preserveWord: boolean = false
   ): string[][] {
-    const delimiter = perserveWord ? "\\b" : "";
+    const delimiter = preserveWord ? "\\b" : "";
     const pattern = new RegExp(
       `${delimiter}${escapeRegExp(text)}${delimiter}`,
       `${caseSensitive ? "i" : ""}g`
@@ -173,7 +207,7 @@ export class Aracari<T extends HTMLElement = HTMLElement> {
       if (node.nodeType === textNodeType) {
         return [[node.textContent, [...path, i].join(".")]];
       }
-      if (typeof node === "object" && node?.childNodes?.length) {
+      if (typeof node === "object" && node ?.childNodes ?.length) {
         return this.getTextNodeMapping(node as T, [...path, i]);
       }
       return [];
