@@ -1,6 +1,6 @@
 {
   "name": "aracari",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "This is a small utility to pull text from html and also replace text in html.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
