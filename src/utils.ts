@@ -1,6 +1,6 @@
 const reRegExpChar = /[\\^$.*+?()[\]{}|]/g;
 const reHasRegExpChar = RegExp(reRegExpChar.source);
-const wordBoundaryChars = [".", "!", "?", "'", '"', "-", ",", "\\s"];
+const wordBoundaryChars = [".", "!", "?", "'", '"', "\\-", ",", "\\s"];
 const wordBoundaryStartsWith = new RegExp(`^[${wordBoundaryChars.join("")}]`);
 const wordBoundaryEndsWith = new RegExp(`[${wordBoundaryChars.join("")}]$`);
 
@@ -25,10 +25,8 @@ export const createRegExpSearch = (search: string, preserveWord: boolean) => {
   const endDelimiter = preserveWord
     ? `(?:$|[${wordBoundaryChars.join("")}])`
     : "";
-  return new RegExp(
-    `${startDelimiter}${escapeRegExp(search)}${endDelimiter}`,
-    "g"
-  );
+  const pattern = `${startDelimiter}${escapeRegExp(search)}${endDelimiter}`;
+  return new RegExp(pattern, "g");
 };
 
 export const getSurroundingChars = (matchText: string): [string, string] => {
