@@ -114,6 +114,18 @@ describe("Aracari", () => {
       .remap();
     expect(aracari.getText()).toBe("Done is the uno thing.");
   });
+  test("replaceText when passed an option of perserveWord option it should work with none latin characters", () => {
+    const element = document.createElement("div");
+    element.innerHTML = "<p>èstamos por la èsta hoy</p>";
+    aracari = new Aracari(element);
+    aracari
+      .replaceText("èsta", [document.createTextNode("this")], {
+        perserveWord: true,
+        // shouldUseNonLatinMatch: true,
+      })
+      .remap();
+    expect(aracari.getText()).toBe("èstamos por la this hoy");
+  });
   test("replaceText when passed an option of perserveWord and a sentence should still work", () => {
     const element = document.createElement("div");
     element.innerHTML = "<p>Foo bar or oo bar</p>";
