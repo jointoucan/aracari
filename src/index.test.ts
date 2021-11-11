@@ -121,7 +121,6 @@ describe("Aracari", () => {
     aracari
       .replaceText("èsta", [document.createTextNode("this")], {
         perserveWord: true,
-        // shouldUseNonLatinMatch: true,
       })
       .remap();
     expect(aracari.getText()).toBe("èstamos por la this hoy");
