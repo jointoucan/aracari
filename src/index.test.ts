@@ -114,6 +114,28 @@ describe("Aracari", () => {
       .remap();
     expect(aracari.getText()).toBe("Done is the uno thing.");
   });
+  test("replaceText when passed an option of perserveWord should preserve the surrounding characters", () => {
+    const element = document.createElement("div");
+    element.innerHTML = "<p>foo-bar</p>";
+    aracari = new Aracari(element);
+    aracari
+      .replaceText("foo", [document.createTextNode("baz")], {
+        perserveWord: true,
+      })
+      .remap();
+    expect(aracari.getText()).toBe("baz-bar");
+  });
+  test("replaceText when passed an option of perserveWord option it should work with non latin characters", () => {
+    const element = document.createElement("div");
+    element.innerHTML = "<p>세계지도 세계</p>";
+    aracari = new Aracari(element);
+    aracari
+      .replaceText("세계", [document.createTextNode("world")], {
+        perserveWord: true,
+      })
+      .remap();
+    expect(aracari.getText()).toBe("세계지도 world");
+  });
   test("replaceText when passed an option of perserveWord and a sentence should still work", () => {
     const element = document.createElement("div");
     element.innerHTML = "<p>Foo bar or oo bar</p>";
