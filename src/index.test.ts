@@ -127,14 +127,14 @@ describe("Aracari", () => {
   });
   test("replaceText when passed an option of perserveWord option it should work with non latin characters", () => {
     const element = document.createElement("div");
-    element.innerHTML = "<p>èstamos por la èsta hoy</p>";
+    element.innerHTML = "<p>세계지도 세계</p>";
     aracari = new Aracari(element);
     aracari
-      .replaceText("èsta", [document.createTextNode("this")], {
+      .replaceText("세계", [document.createTextNode("world")], {
         perserveWord: true,
       })
       .remap();
-    expect(aracari.getText()).toBe("èstamos por la this hoy");
+    expect(aracari.getText()).toBe("세계지도 world");
   });
   test("replaceText when passed an option of perserveWord and a sentence should still work", () => {
     const element = document.createElement("div");
